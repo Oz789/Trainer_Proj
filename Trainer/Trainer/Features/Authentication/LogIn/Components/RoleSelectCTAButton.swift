@@ -1,11 +1,18 @@
+//
+//  RoleCTAButton.swift
+//  Trainer
+//
+//  Created by Osvaldo Mosso on 1/27/26.
+//
+
+
 import SwiftUI
 
-struct LogInCTAButton: View {
+struct RoleSelectCTAButton: View {
     @EnvironmentObject private var themeManager: ThemeManager
     private var theme: AppTheme { themeManager.theme }
 
     let title: String
-    var height: CGFloat = 54
     let action: () -> Void
 
     var body: some View {
@@ -14,7 +21,7 @@ struct LogInCTAButton: View {
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundColor(.white)
                 .frame(maxWidth: 320)
-                .frame(height: height)
+                .frame(height: 54)
                 .background(
                     LinearGradient(colors: theme.ctaGradient, startPoint: .leading, endPoint: .trailing)
                 )
@@ -25,9 +32,12 @@ struct LogInCTAButton: View {
 }
 
 #Preview {
-    LogInCTAButton(title: "Log In") {}
-        .padding()
-        .background(Color.black)
-        .environmentObject(ThemeManager())
-        .preferredColorScheme(.dark)
+    VStack(spacing: 12) {
+        RoleSelectCTAButton(title: "Trainer") {}
+        RoleSelectCTAButton(title: "User") {}
+    }
+    .padding()
+    .background(Color.black)
+    .environmentObject(ThemeManager())
+    .preferredColorScheme(.dark)
 }
