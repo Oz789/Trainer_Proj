@@ -2,26 +2,20 @@ import SwiftUI
 
 struct RootLogInView: View {
 
+    @EnvironmentObject private var themeManager: ThemeManager
+    private var theme: AppTheme { themeManager.theme }
     @State private var isLoginMode: Bool = true
     @State private var email: String = ""
     @State private var password: String = ""
-
-    // Temporary tokens - replace with ThemeManager
-    private let bgGradient: [Color] = [
-        .black,
-        Color(red: 0.13, green: 0.13, blue: 0.13)
-    ]
-
-    private let ctaGradient: [Color] = [
-        Color(red: 0.68, green: 0.32, blue: 0.98),
-        Color(red: 1.00, green: 0.27, blue: 0.45)
-    ]
+    // for starting the flow (we’ll wire these later)
+    @State private var showTrainerSignUp = false
+    @State private var showUserSignUp = false
 
     var body: some View {
         NavigationStack {
             ZStack {
                 LinearGradient(
-                    colors: bgGradient,
+                    colors: theme.backgroundGradient,
                     startPoint: UnitPoint(x: 0.5, y: 0.10),
                     endPoint: UnitPoint(x: 0.5, y: 0.95)
                 )
@@ -33,30 +27,22 @@ struct RootLogInView: View {
                     VStack(spacing: 18) {
                         Text("TRAINER")
                             .font(.system(size: 38, weight: .bold))
-                            .foregroundColor(.white)
+                            .foregroundColor(theme.titleColor)
 
-                        Picker("", selection: $isLoginMode) {
-                            Text("Log In").tag(true)
-                            Text("Sign Up").tag(false)
-                        }
-                        .pickerStyle(.segmented)
-                        .frame(maxWidth: 320)
-                        .tint(Color.white.opacity(0.22))
-                        .background(
-                            RoundedRectangle(cornerRadius: 10)
-                                .fill(Color.white.opacity(0.10))
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                       LogInSegments(isLoginMode: $isLoginMode)
 
-                        VStack(spacing: 14) {
-                            GlassField(placeholder: "Email", text: $email, isSecure: false)
-                            GlassField(placeholder: "Password", text: $password, isSecure: true)
+                        Group {
+                            if isLoginMode {
+                                LoginFormSection(email: $email, password: $password)
+                            } else {
+                                SignUpRoleSection(
+                                    onTrainer: { showTrainerSignUp = true },
+                                    onUser: { showUserSignUp = true }
+                                )
+                            }
                         }
-
-                        PrimaryCTAButton(title: "Log In", gradient: ctaGradient) {
-                            // mock action for now
-                        }
-                        .padding(.top, 10)
+                        .transition(.opacity)
+                        .animation(.easeInOut(duration: 0.25), value: isLoginMode)
                     }
 
                     Spacer()
@@ -65,9 +51,23 @@ struct RootLogInView: View {
             }
         }
         .preferredColorScheme(.dark)
+        .fullScreenCover(isPresented: $showTrainerSignUp) {
+            // placeholder for now:
+            Text("Trainer Sign Up")
+                .foregroundColor(.white)
+                .background(Color.black.ignoresSafeArea())
+        }
+        .fullScreenCover(isPresented: $showUserSignUp) {
+            // placeholder for now:
+            Text("User Sign Up")
+                .foregroundColor(.white)
+                .background(Color.black.ignoresSafeArea())
+        }
     }
 }
 
 #Preview {
     RootLogInView()
+        .environmentObject(ThemeManager())
+        .preferredColorScheme(.dark)
 }
