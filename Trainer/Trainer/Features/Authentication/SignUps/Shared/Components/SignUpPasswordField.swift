@@ -1,5 +1,5 @@
 //
-//  TSUTextField.swift
+//  TSUSecureField.swift
 //  Trainer
 //
 //  Created by Osvaldo Mosso on 1/27/26.
@@ -8,21 +8,16 @@
 
 import SwiftUI
 
-struct TSUTextField: View {
+struct SignUpPasswordField: View {
     let placeholder: String
     @Binding var text: String
-
-    var keyboardType: UIKeyboardType = .default
-    var textInputAutocapitalization: TextInputAutocapitalization = .sentences
 
     var error: String? = nil
     var footnote: String? = nil
 
     var body: some View {
         VStack(spacing: 6) {
-            TextField("", text: $text, prompt: Text(placeholder).foregroundColor(.white.opacity(0.7)))
-                .keyboardType(keyboardType)
-                .textInputAutocapitalization(textInputAutocapitalization)
+            SecureField("", text: $text, prompt: Text(placeholder).foregroundColor(.white.opacity(0.7)))
                 .padding(.horizontal, 14)
                 .padding(.vertical, 12)
                 .background(Color.white.opacity(0.08))
