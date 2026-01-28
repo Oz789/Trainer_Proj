@@ -29,14 +29,14 @@ struct TrainerSignUpMainView: View {
                             .foregroundStyle(.white.opacity(0.55))
                             .frame(maxWidth: .infinity, alignment: .leading)
 
-                        TSUProfilePicButton(
+                        SignUpSecondaryButton(
                             title: "Choose a Profile Picture",
                             systemImage: "person.crop.circle.badge.plus"
                         ) {
                             // TODO: image picker later
                         }
 
-                        TSUContinueButton(
+                        SignUpContinueButton(
                             title: viewModel.isSubmitting ? "Creating Account..." : "Continue",
                             isLoading: viewModel.isSubmitting,
                             isDisabled: !viewModel.canContinue

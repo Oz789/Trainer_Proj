@@ -8,7 +8,7 @@
 
 import SwiftUI
 
-struct TSUContinueButton: View {
+struct SignUpContinueButton: View {
     let title: String
     var isLoading: Bool = false
     var isDisabled: Bool = false
