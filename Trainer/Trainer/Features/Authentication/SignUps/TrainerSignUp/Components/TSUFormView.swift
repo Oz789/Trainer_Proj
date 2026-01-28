@@ -16,14 +16,14 @@ struct TrainerSignUpFormView: View {
         VStack(spacing: 14) {
 
             HStack(spacing: 12) {
-                TSUTextField(
+                SignUpTextField(
                     placeholder: "First Name*",
                     text: $form.firstName,
                     textInputAutocapitalization: .words,
                     error: errors[.firstName]
                 )
 
-                TSUTextField(
+                SignUpTextField(
                     placeholder: "Last Name*",
                     text: $form.lastName,
                     textInputAutocapitalization: .words,
@@ -31,7 +31,7 @@ struct TrainerSignUpFormView: View {
                 )
             }
 
-            TSUTextField(
+            SignUpTextField(
                 placeholder: "Email Address*",
                 text: $form.email,
                 keyboardType: .emailAddress,
@@ -40,23 +40,23 @@ struct TrainerSignUpFormView: View {
                 footnote: "Use a valid email like name@example.com"
             )
 
-            TSUPasswordField(
+            SignUpPasswordField(
                 placeholder: "Password*",
                 text: $form.password,
                 error: errors[.password],
                 footnote: "Password must be at least 6 characters."
             )
 
-            TSUTextField(
+            SignUpTextField(
                 placeholder: "User Display Name (optional)",
                 text: $form.displayName,
                 textInputAutocapitalization: .words
             )
 
-            TSUTextField(placeholder: "Age (optional)", text: $form.age, keyboardType: .numberPad, textInputAutocapitalization: .never)
-            TSUTextField(placeholder: "Gender (optional)", text: $form.gender, textInputAutocapitalization: .words)
-            TSUTextField(placeholder: "Height (optional)", text: $form.height, textInputAutocapitalization: .never)
-            TSUTextField(placeholder: "Weight (optional)", text: $form.weight, textInputAutocapitalization: .never)
+            SignUpTextField(placeholder: "Age (optional)", text: $form.age, keyboardType: .numberPad, textInputAutocapitalization: .never)
+            SignUpTextField(placeholder: "Gender (optional)", text: $form.gender, textInputAutocapitalization: .words)
+            SignUpTextField(placeholder: "Height (optional)", text: $form.height, textInputAutocapitalization: .never)
+            SignUpTextField(placeholder: "Weight (optional)", text: $form.weight, textInputAutocapitalization: .never)
         }
     }
 }

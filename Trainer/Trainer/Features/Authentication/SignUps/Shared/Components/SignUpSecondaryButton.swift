@@ -8,7 +8,7 @@
 
 import SwiftUI
 
-struct TSUProfilePicButton: View {
+struct SignUpSecondaryButton: View {
     let title: String
     var systemImage: String? = nil
     let action: () -> Void
