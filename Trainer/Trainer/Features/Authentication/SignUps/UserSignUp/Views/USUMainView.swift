@@ -59,7 +59,7 @@ struct UserSignUpMainView: View {
 
 
                 case .profile:
-                    UserSignUpProfileView()
+                    UserRootProfileView()
                 }
             }
             .toolbar {
