@@ -82,7 +82,7 @@ struct UserSignUpMainView: View {
 
 #Preview {
     let tm = ThemeManager()
-    tm.apply("theme.green")
+    tm.apply("theme.horizon")
 
     return UserSignUpMainView()
         .environmentObject(tm)

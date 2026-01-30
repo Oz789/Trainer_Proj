@@ -9,7 +9,7 @@
 import Foundation
 
 struct UserSignUpFormModel{
-    // Basic (required)
+    //(required)
     var firstName: String = ""
     var lastName: String = ""
     var email: String = ""
