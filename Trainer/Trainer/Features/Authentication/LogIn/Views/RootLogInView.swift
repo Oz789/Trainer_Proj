@@ -1,21 +1,28 @@
 import SwiftUI
 
 struct RootLogInView: View {
-
     @EnvironmentObject private var themeManager: ThemeManager
-    private var theme: AppTheme { themeManager.theme }
+    @Environment(\.colorScheme) private var scheme
+
+    private var themeToken: ThemeTokens {
+        themeManager.tokens(for: scheme)
+    }
+
+
     @State private var isLoginMode: Bool = true
     @State private var email: String = ""
     @State private var password: String = ""
-    // for starting the flow (we’ll wire these later)
     @State private var showTrainerSignUp = false
     @State private var showUserSignUp = false
+
+    // dev theme cycling
+    @State private var themeIndex: Int = 0
 
     var body: some View {
         NavigationStack {
             ZStack {
                 LinearGradient(
-                    colors: theme.backgroundGradient,
+                    colors: themeToken.backgroundGradient,
                     startPoint: UnitPoint(x: 0.5, y: 0.10),
                     endPoint: UnitPoint(x: 0.5, y: 0.95)
                 )
@@ -25,11 +32,12 @@ struct RootLogInView: View {
                     Spacer()
 
                     VStack(spacing: 18) {
+                        
                         Text("TRAINER")
                             .font(.system(size: 38, weight: .bold))
-                            .foregroundColor(theme.titleColor)
+                            .foregroundColor(themeToken.titleColor)
 
-                       LogInSegments(isLoginMode: $isLoginMode)
+                        LogInSegments(isLoginMode: $isLoginMode)
 
                         Group {
                             if isLoginMode {
@@ -48,20 +56,37 @@ struct RootLogInView: View {
                     Spacer()
                 }
                 .padding(.horizontal, 22)
+
+                // dev button — delete later
+                VStack {
+                    HStack {
+                        Button("NEXT THEME") {
+                            let themes = themeManager.allThemes
+                            guard !themes.isEmpty else { return }
+
+                            themeIndex = (themeIndex + 1) % themes.count
+                            themeManager.apply(themes[themeIndex].id)
+                        }
+                        .padding(10)
+                        .background(Color.black.opacity(0.6))
+                        .foregroundColor(.white)
+
+                        Spacer()
+                    }
+                    .padding(.top, 12)
+                    .padding(.leading, 12)
+
+                    Spacer()
+                }
             }
         }
-        .preferredColorScheme(.dark)
         .fullScreenCover(isPresented: $showTrainerSignUp) {
-            // placeholder for now:
-            Text("Trainer Sign Up")
-                .foregroundColor(.white)
-                .background(Color.black.ignoresSafeArea())
+            TrainerSignUpMainView()
+                .environmentObject(themeManager)
         }
         .fullScreenCover(isPresented: $showUserSignUp) {
-            // placeholder for now:
-            Text("User Sign Up")
-                .foregroundColor(.white)
-                .background(Color.black.ignoresSafeArea())
+            UserSignUpMainView()
+                .environmentObject(themeManager)
         }
     }
 }
@@ -69,5 +94,5 @@ struct RootLogInView: View {
 #Preview {
     RootLogInView()
         .environmentObject(ThemeManager())
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(.light)
 }

@@ -2,7 +2,11 @@ import SwiftUI
 
 struct LogInCTAButton: View {
     @EnvironmentObject private var themeManager: ThemeManager
-    private var theme: AppTheme { themeManager.theme }
+    @Environment(\.colorScheme) private var scheme
+
+    private var themeToken: ThemeTokens {
+        themeManager.tokens(for: scheme)
+    }
 
     let title: String
     var height: CGFloat = 54
@@ -16,7 +20,7 @@ struct LogInCTAButton: View {
                 .frame(maxWidth: 320)
                 .frame(height: height)
                 .background(
-                    LinearGradient(colors: theme.ctaGradient, startPoint: .leading, endPoint: .trailing)
+                    LinearGradient(colors: themeToken.ctaGradient, startPoint: .leading, endPoint: .trailing)
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 14))
                 .shadow(color: .black.opacity(0.35), radius: 14, x: 0, y: 10)
