@@ -1,16 +1,12 @@
-//
-//  AuthSegmentedControl.swift
-//  Trainer
-//
-//  Created by Osvaldo Mosso on 1/27/26.
-//
-
-
 import SwiftUI
 
 struct LogInSegments: View {
     @EnvironmentObject private var themeManager: ThemeManager
-    private var theme: AppTheme { themeManager.theme }
+    @Environment(\.colorScheme) private var scheme
+
+    private var themeToken: ThemeTokens {
+        themeManager.tokens(for: scheme)
+    }
 
     @Binding var isLoginMode: Bool
 
@@ -21,11 +17,15 @@ struct LogInSegments: View {
         }
         .pickerStyle(.segmented)
         .frame(maxWidth: 320)
-        .tint(theme.segmentedTint)
+        .tint(themeToken.segmentedTint)
         .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(theme.segmentedBackground)
-        )
+            RoundedRectangle(cornerRadius: 14)
+                .fill(themeToken.cardBackground)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14)
+                        .stroke(themeToken.fieldStroke, lineWidth: 1.5)
+                )
+            )
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 }

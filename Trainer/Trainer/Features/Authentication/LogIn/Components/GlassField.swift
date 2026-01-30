@@ -2,30 +2,39 @@ import SwiftUI
 
 struct GlassField: View {
     @EnvironmentObject private var themeManager: ThemeManager
-    private var theme: AppTheme { themeManager.theme }
+    @Environment(\.colorScheme) private var scheme
+
+    private var themeToken: ThemeTokens {
+        themeManager.tokens(for: scheme)
+    }
+
 
     let placeholder: String
     @Binding var text: String
     let isSecure: Bool
 
+    @FocusState private var isFocused: Bool
+
     var body: some View {
         ZStack(alignment: .leading) {
             if text.isEmpty {
                 Text(placeholder)
-                    .foregroundColor(theme.textSecondary)
+                    .foregroundColor(themeToken.fieldPlaceholder)
                     .padding(.horizontal, 18)
             }
 
             if isSecure {
                 SecureField("", text: $text)
-                    .foregroundColor(theme.textPrimary)
+                    .focused($isFocused)
+                    .foregroundColor(themeToken.fieldText)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
                     .padding(.vertical, 14)
                     .padding(.horizontal, 18)
             } else {
                 TextField("", text: $text)
-                    .foregroundColor(theme.textPrimary)
+                    .focused($isFocused)
+                    .foregroundColor(themeToken.fieldText)
                     .keyboardType(placeholder.lowercased().contains("email") ? .emailAddress : .default)
                     .textInputAutocapitalization(.never)
                     .disableAutocorrection(true)
@@ -36,24 +45,20 @@ struct GlassField: View {
         .frame(maxWidth: 320)
         .background(
             RoundedRectangle(cornerRadius: 14)
-                .fill(theme.fieldFill)
+                .fill(themeToken.fieldFill)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 14)
-                .stroke(theme.fieldStroke, lineWidth: 1)
+                .stroke(isFocused ? themeToken.fieldStrokeFocused : themeToken.fieldStroke, lineWidth: 2)
         )
     }
 }
 
-#Preview {
-    ZStack {
-        Color.black.ignoresSafeArea()
-        VStack(spacing: 14) {
-            GlassField(placeholder: "Email", text: .constant(""), isSecure: false)
-            GlassField(placeholder: "Password", text: .constant(""), isSecure: true)
-        }
-        .padding()
+#Preview("GlassField") {
+    VStack(spacing: 14) {
+        GlassField(placeholder: "Email", text: .constant(""), isSecure: false)
+        GlassField(placeholder: "Password", text: .constant(""), isSecure: true)
     }
+    .padding()
     .environmentObject(ThemeManager())
-    .preferredColorScheme(.dark)
 }
