@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct UserRootProfileView: View {
+struct UserProfileMainView: View {
     @State private var selectedTab = 0
     
     var body: some View {
@@ -158,6 +158,5 @@ struct TabButton: View {
 }
 
 #Preview {
-    UserRootProfileView()
-        .preferredColorScheme(.dark)
+    UserProfileMainView()
 }
