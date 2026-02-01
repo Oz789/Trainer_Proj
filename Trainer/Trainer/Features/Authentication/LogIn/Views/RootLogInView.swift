@@ -2,12 +2,12 @@ import SwiftUI
 
 struct RootLogInView: View {
     @EnvironmentObject private var themeManager: ThemeManager
+    @EnvironmentObject private var session: SessionManager
     @Environment(\.colorScheme) private var scheme
 
     private var themeToken: ThemeTokens {
         themeManager.tokens(for: scheme)
     }
-
 
     @State private var isLoginMode: Bool = true
     @State private var email: String = ""
@@ -32,7 +32,6 @@ struct RootLogInView: View {
                     Spacer()
 
                     VStack(spacing: 18) {
-                        
                         Text("TRAINER")
                             .font(.system(size: 38, weight: .bold))
                             .foregroundColor(themeToken.titleColor)
@@ -79,20 +78,17 @@ struct RootLogInView: View {
                     Spacer()
                 }
             }
-        }
-        .fullScreenCover(isPresented: $showTrainerSignUp) {
-            TrainerSignUpMainView()
-                .environmentObject(themeManager)
-        }
-        .fullScreenCover(isPresented: $showUserSignUp) {
-            UserSignUpMainView()
-                .environmentObject(themeManager)
+
+            .navigationDestination(isPresented: $showTrainerSignUp) {
+                TrainerSignUpMainView( onSignedUp: { session.signIn(role: .trainer) }
+                )
+            }
+            .navigationDestination(isPresented: $showUserSignUp) {
+                UserSignUpMainView()
+                    .environmentObject(themeManager)
+
+                }
+            }
         }
     }
-}
 
-#Preview {
-    RootLogInView()
-        .environmentObject(ThemeManager())
-        .preferredColorScheme(.light)
-}
