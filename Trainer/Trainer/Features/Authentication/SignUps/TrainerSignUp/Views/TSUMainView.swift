@@ -4,77 +4,72 @@ struct TrainerSignUpMainView: View {
     var onSignedUp: (() -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var scheme
+    
     @StateObject private var viewModel = TrainerSignUpViewModel()
-
+    
     @State private var showCancelConfirm = false
 
     var body: some View {
-        NavigationStack(path: $viewModel.path) {
-            ZStack {
-                SignUpBackground()
+        ZStack {
+            SignUpBackground()
 
-                ScrollView {
-                    VStack(spacing: 18) {
-                        Spacer().frame(height: 40)
+            ScrollView {
+                VStack(spacing: 18) {
+                    Spacer().frame(height: 40)
 
-                        TrainerSignUpHeader()
+                    TrainerSignUpHeader()
 
-                        TrainerSignUpFormView(
-                            form: $viewModel.form,
-                            errors: viewModel.fieldErrors
-                        )
+                    TrainerSignUpFormView(
+                        form: $viewModel.form,
+                        errors: viewModel.fieldErrors
+                    )
 
-                        Text("* Indicates a required field")
-                            .font(.caption2)
-                            .foregroundStyle(.white.opacity(0.55))
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                    Text("* Indicates a required field")
+                        .font(.caption2)
+                        .foregroundStyle(.white.opacity(0.55))
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
-                        SignUpSecondaryButton(
-                            title: "Choose a Profile Picture",
-                            systemImage: "person.crop.circle.badge.plus"
-                        ) {
-                            // TODO: image picker later
+                    SignUpSecondaryButton(
+                        title: "Choose a Profile Picture",
+                        systemImage: "person.crop.circle.badge.plus"
+                    ) { }
+
+                    SignUpContinueButton(
+                        title: viewModel.isSubmitting ? "Creating Account..." : "Continue",
+                        isLoading: viewModel.isSubmitting,
+                        isDisabled: !viewModel.canContinue
+                    ) {
+                        viewModel.validateAndContinue {
+                            onSignedUp?()
                         }
-
-                        SignUpContinueButton(
-                            title: viewModel.isSubmitting ? "Creating Account..." : "Continue",
-                            isLoading: viewModel.isSubmitting,
-                            isDisabled: !viewModel.canContinue
-                        ) {
-                            viewModel.validateAndContinue()
-                        }
-
-                        Spacer(minLength: 20)
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 40)
+
+                    Spacer(minLength: 20)
                 }
-            }
-            .ignoresSafeArea()
-            .hideKeyboardOnTap()
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") { showCancelConfirm = true }
-                }
-            }
-            .alert("Cancel sign up?", isPresented: $showCancelConfirm) {
-                Button("Continue", role: .cancel) {}
-                Button("Cancel", role: .destructive) { dismiss() }
-            }
-            .alert("Sign Up Failed", isPresented: $viewModel.showErrorAlert) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(viewModel.errorMessage)
-            }
-            .navigationDestination(for: TrainerSignUpViewModel.Route.self) { route in
-                switch route {
-                case .profile:
-                    TrainerProfileMainView()
-                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 40)
             }
         }
+        .ignoresSafeArea()
+        .hideKeyboardOnTap()
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    dismiss()
+                } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 17, weight: .semibold))
+                }
+            }
+
+        }
+        .tint(scheme == .dark ? .white : .black)
+
     }
 }
+
 
 #Preview("Trainer Sign Up") {
     let tm = ThemeManager()
