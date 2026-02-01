@@ -1,11 +1,3 @@
-//
-//  ProfileSettingsButton.swift
-//  Trainer
-//
-//  Created by Osvaldo Mosso on 1/29/26.
-//
-
-
 import SwiftUI
 
 struct ProfileSettingsButton: View {
@@ -14,7 +6,7 @@ struct ProfileSettingsButton: View {
             SettingsMainView()
         } label: {
             Image(systemName: "gearshape")
-                .foregroundStyle(.white)
+                .foregroundStyle(.gray)
         }
         .accessibilityLabel("Settings")
     }
