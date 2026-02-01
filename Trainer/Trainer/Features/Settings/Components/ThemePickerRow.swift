@@ -51,5 +51,4 @@ struct ThemePickerRow: View {
         }
     }
     .environmentObject(tm)
-    .preferredColorScheme(.dark)
 }
