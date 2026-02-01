@@ -9,7 +9,7 @@ struct TrainerSignUpMainView: View {
     @State private var showCancelConfirm = false
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $viewModel.path) {
             ZStack {
                 SignUpBackground()
 
@@ -42,7 +42,6 @@ struct TrainerSignUpMainView: View {
                             isDisabled: !viewModel.canContinue
                         ) {
                             viewModel.validateAndContinue()
-                            // onSignedUp?() -> later when success is real
                         }
 
                         Spacer(minLength: 20)
@@ -67,11 +66,17 @@ struct TrainerSignUpMainView: View {
             } message: {
                 Text(viewModel.errorMessage)
             }
+            .navigationDestination(for: TrainerSignUpViewModel.Route.self) { route in
+                switch route {
+                case .profile:
+                    TrainerProfileMainView()
+                }
+            }
         }
     }
 }
 
-#Preview {
+#Preview("Trainer Sign Up") {
     let tm = ThemeManager()
     tm.apply("theme.green")
 

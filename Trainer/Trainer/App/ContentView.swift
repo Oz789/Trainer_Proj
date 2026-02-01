@@ -1,10 +1,3 @@
-//
-//  ContentView.swift
-//  Trainer
-//
-//  Created by Osvaldo Mosso on 1/26/26.
-//
-
 import SwiftUI
 
 struct ContentView: View {
@@ -14,5 +7,7 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
+    let tm = ThemeManager()
+    return ContentView()
+        .environmentObject(tm)
 }

@@ -1,11 +1,3 @@
-//
-//  TrainerSignUpViewModel.swift
-//  Trainer
-//
-//  Created by Osvaldo Mosso on 1/27/26.
-//
-
-
 import Foundation
 
 @MainActor
@@ -15,13 +7,16 @@ final class TrainerSignUpViewModel: ObservableObject {
         case firstName, lastName, email, password
     }
 
-    @Published var form = TrainerSignUpFormModel()
+    enum Route: Hashable {
+        case profile
+    }
 
+    @Published var form = TrainerSignUpFormModel()
     @Published var isSubmitting: Bool = false
     @Published var showErrorAlert: Bool = false
     @Published var errorMessage: String = ""
-
     @Published private(set) var fieldErrors: [Field: String] = [:]
+    @Published var path: [Route] = []
 
     var canContinue: Bool {
         validate().isEmpty && !isSubmitting
@@ -49,12 +44,15 @@ final class TrainerSignUpViewModel: ObservableObject {
         guard fieldErrors.isEmpty else { return }
 
         isSubmitting = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-            self.isSubmitting = false
+
+        Task {
+ 
+            try? await Task.sleep(nanoseconds: 350_000_000)
+            isSubmitting = false
+            path.append(.profile)
         }
     }
 }
-
 
 private extension String {
     var trimmed: String { trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -64,4 +62,3 @@ private extension String {
         return range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil
     }
 }
-
