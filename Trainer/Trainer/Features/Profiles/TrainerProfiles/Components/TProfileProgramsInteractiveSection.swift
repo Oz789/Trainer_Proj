@@ -1,6 +1,5 @@
 import SwiftUI
 
-/// Programs section that supports tapping a card to present a fullscreen overlay.
 struct TProfileProgramsInteractiveSection: View {
     let title: String
     let programs: [TrainerProgramCard]
