@@ -1,6 +1,6 @@
 import SwiftUI
 
-struct TabBarButton: View {
+struct TabBarButtons: View {
     let tab: AppRoleTabs
     @Binding var selection: AppRoleTabs
 
