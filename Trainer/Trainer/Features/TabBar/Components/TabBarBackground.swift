@@ -1,3 +1,5 @@
+import SwiftUI
+
 struct TabBarBackground: View {
     var body: some View {
         ZStack(alignment: .top) {
