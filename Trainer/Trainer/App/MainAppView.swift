@@ -17,7 +17,7 @@ struct AppTabContainerView: View {
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
-            
+
             ZStack {
                 ForEach(availableTabs, id: \.self) { tab in
                     tabStack(for: tab)
@@ -91,7 +91,7 @@ struct AppTabContainerView: View {
     }
 }
 
-// MARK: - Placeholder
+// MARK: - Placeholder (keep private)
 
 private struct PlaceholderScreen: View {
     let title: String
