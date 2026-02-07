@@ -6,12 +6,7 @@ struct ContentView: View {
     var body: some View {
         Group {
             if session.isLoggedIn, let role = session.role {
-                switch role {
-                case .trainer:
-                    TrainerProfileMainView()
-                case .client:
-                    UserProfileMainView() 
-                }
+                AppTabContainerView(role: role)
             } else {
                 RootLogInView()
             }
