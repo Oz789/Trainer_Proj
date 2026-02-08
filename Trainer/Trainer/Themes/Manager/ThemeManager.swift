@@ -17,13 +17,15 @@ final class ThemeManager: ObservableObject {
             theme = SkyBlueTheme()
         case "theme.Horizon":
             theme = HorizonTheme()
+        case "theme.Green":
+            theme = GreenTheme()
         default:
             theme = PinkTheme()
         }
     }
 
     var allThemes: [any AppThemeModel] {
-        [PinkTheme(), SkyBlueTheme(), HorizonTheme()]
+        [PinkTheme(), SkyBlueTheme(), HorizonTheme(), GreenTheme()]
     }
 
     func tokens(for scheme: ColorScheme) -> ThemeTokens {
