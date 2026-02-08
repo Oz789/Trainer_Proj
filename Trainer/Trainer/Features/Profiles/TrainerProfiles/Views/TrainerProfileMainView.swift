@@ -6,7 +6,7 @@ struct TrainerProfileMainView: View {
 
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            Color.gray.ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 18) {
