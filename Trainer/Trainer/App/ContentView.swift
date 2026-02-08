@@ -17,7 +17,7 @@ struct ContentView: View {
 
 #Preview {
     let tm = ThemeManager()
-    tm.apply("theme.green")
+    tm.apply("theme.Cinder")
 
     let session = SessionManager()
     session.signOut()
