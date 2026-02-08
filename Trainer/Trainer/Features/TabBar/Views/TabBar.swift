@@ -4,56 +4,51 @@ struct TabBar: View {
     let tabs: [AppRoleTabs]
     @Binding var selection: AppRoleTabs
 
-    var body: some View {
-        HStack(spacing: 0) {
-            ForEach(tabs, id: \.self) { tab in
-                Button {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 0.9)) {
-                        selection = tab
-                    }
-                } label: {
-                    VStack(spacing: 6) {
-                        Image(systemName: tab.systemImage)
-                            .font(.system(size: 16, weight: .semibold))
-                            .frame(height: 18)
+    let center: AppRoleTabs
+    let onCenterTap: () -> Void
 
-                        Text(tab.title)
-                            .font(.caption2.weight(.semibold))
-                            .lineLimit(1)
+    var body: some View {
+        GeometryReader { proxy in
+            let safeBottom = proxy.safeAreaInsets.bottom
+
+            ZStack(alignment: .bottom) {
+                TabBarBackground()
+                    .frame(height: 64 + safeBottom)
+                    .ignoresSafeArea(edges: .bottom)
+
+                HStack(spacing: 0) {
+                    ForEach(leftTabs, id: \.self) { tab in
+                        TabBarButtons(tab: tab, selection: $selection)
                     }
-                    .foregroundStyle(selection == tab ? .white : .white.opacity(0.55))
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
-                    .contentShape(Rectangle())
+
+                    Color.clear
+                        .frame(width: 78)
+
+                    ForEach(rightTabs, id: \.self) { tab in
+                        TabBarButtons(tab: tab, selection: $selection)
+                    }
                 }
-                .buttonStyle(.plain)
+                .frame(height: 64)
+                .padding(.bottom, safeBottom == 0 ? 8 : (safeBottom - 2))
+
+                TabCenterButton(onTap: onCenterTap)
+                    .offset(y: -22)
             }
         }
-        .padding(.horizontal, 10)
-        .padding(.top, 8)
-        .padding(.bottom, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .fill(.white.opacity(0.08))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 22, style: .continuous)
-                        .strokeBorder(.white.opacity(0.10))
-                )
-        )
-        .padding(.horizontal, 16)
-        .padding(.bottom, 10)
+        .frame(height: 50)
     }
-}
 
-#Preview {
-    ZStack {
-        Color.black.ignoresSafeArea()
-        VStack {
-            Spacer()
-            TabBar(
-                tabs: TabConfig(role: .trainer).tabs,
-                selection: .constant(.home)
-            )
-        }
+    // MARK: - Logic
+
+    private var leftTabs: [AppRoleTabs] {
+        let filtered = tabs.filter { $0 != center }
+        let mid = filtered.count / 2
+        return Array(filtered.prefix(mid))
+    }
+
+    private var rightTabs: [AppRoleTabs] {
+        let filtered = tabs.filter { $0 != center }
+        let mid = filtered.count / 2
+        return Array(filtered.suffix(from: mid))
     }
 }
