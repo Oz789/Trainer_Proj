@@ -80,7 +80,7 @@ struct AppTabContainerView: View {
             PlaceholderScreen(title: "Discover")
 
         case .clients:
-            PlaceholderScreen(title: "Clients")
+            TRMainClientsView()
 
         case .programs:
             PlaceholderScreen(title: "Workout Builder")
