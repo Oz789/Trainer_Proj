@@ -6,7 +6,7 @@ struct AppTabContainerView: View {
     @State private var selection: AppRoleTabs
     @State private var paths: [AppRoleTabs: NavigationPath] = [:]
 
-    private let centerTab: AppRoleTabs = .programs
+    private let centerTab: AppRoleTabs = .profile
 
     init(role: AppUserRoles) {
         self.role = role
@@ -73,8 +73,11 @@ struct AppTabContainerView: View {
         case .home:
             PlaceholderScreen(title: "Home")
 
-        case .dashboard:
+        case .appointments:
             PlaceholderScreen(title: "")
+        
+        case .dashboard:
+            PlaceholderScreen(title: "What")
 
         case .discover:
             PlaceholderScreen(title: "Discover")
