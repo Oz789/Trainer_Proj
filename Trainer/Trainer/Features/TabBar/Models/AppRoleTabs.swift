@@ -4,6 +4,7 @@ enum AppRoleTabs: Hashable {
     case home
     case discover
     case profile
+    case appointments
 
     // Trainer-specific
     case clients
@@ -20,7 +21,8 @@ enum AppRoleTabs: Hashable {
         case .profile: return "Profile"
         case .clients: return "Clients"
         case .programs: return "Builder"
-        case .dashboard: return "what"
+        case .dashboard: return "Dashboard"
+        case .appointments: return "Appointments"
         case .workouts: return "Workouts"
         }
     }
@@ -33,6 +35,7 @@ enum AppRoleTabs: Hashable {
         case .clients: return "person.2.fill"
         case .programs: return "dumbbell.fill"
         case .dashboard: return "line.3.horizontal"
+        case .appointments: return "calendar"
         case .workouts: return "dumbbell.fill"
         }
     }
@@ -44,9 +47,9 @@ struct TabConfig {
     var tabs: [AppRoleTabs] {
         switch role {
         case .trainer:
-            return [.profile, .dashboard,.clients, .programs, .workouts]
+            return [.dashboard, .appointments, .profile, .clients, .workouts]
         case .client:
-            return [.profile, .workouts, .dashboard]
+            return [.profile, .workouts, .appointments]
         }
     }
 }
