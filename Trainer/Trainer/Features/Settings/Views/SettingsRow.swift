@@ -1,11 +1,3 @@
-//
-//  SettingsRow.swift
-//  Trainer
-//
-//  Created by Osvaldo Mosso on 1/29/26.
-//
-
-
 import SwiftUI
 
 struct SettingsRow: View {
