@@ -31,8 +31,11 @@ struct TabBar: View {
                 .frame(height: 64)
                 .padding(.bottom, safeBottom == 0 ? 8 : (safeBottom - 2))
 
-                TabCenterButton(onTap: onCenterTap)
-                    .offset(y: -22)
+                TabCenterButton(isSelected: selection == center) {
+                    selection = center
+                }
+                .offset(y: -22)
+
             }
         }
         .frame(height: 50)

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct TabCenterButton: View {
+    let isSelected: Bool
     let onTap: () -> Void
 
     var body: some View {
@@ -18,14 +19,20 @@ struct TabCenterButton: View {
                     .shadow(color: .blue.opacity(0.20), radius: 18, x: 0, y: 10)
                     .overlay(
                         Circle()
-                            .stroke(.white.opacity(0.10), lineWidth: 1)
+                            .stroke(.white.opacity(isSelected ? 0.22 : 0.10), lineWidth: 1)
                     )
 
-                Image(systemName: "rectangle")
+                Image(systemName: "person.fill")
                     .font(.system(size: 16, weight: .medium))
                     .foregroundStyle(.white)
             }
         }
         .buttonStyle(.plain)
     }
+}
+
+#Preview {
+    TabCenterButton(isSelected: false, onTap: {})
+        .padding()
+        .background(Color.black)
 }
