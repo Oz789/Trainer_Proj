@@ -1,6 +1,22 @@
 import SwiftUI
 
+enum ThemeSurfaceStyle: String, CaseIterable, Identifiable {
+    case glass
+    case matte
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .glass: return "Glass"
+        case .matte: return "Matte"
+        }
+    }
+}
+
 struct ThemeTokens {
+    var surfaceStyle: ThemeSurfaceStyle = .glass
+
     var backgroundGradient: [Color]
 
     var titleColor: Color
