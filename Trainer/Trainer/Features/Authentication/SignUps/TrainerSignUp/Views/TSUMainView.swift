@@ -40,7 +40,7 @@ struct TrainerSignUpMainView: View {
                         isLoading: viewModel.isSubmitting,
                         isDisabled: !viewModel.canContinue
                     ) {
-                        viewModel.validateAndContinue {
+                        viewModel.submitTrainerSignUp {
                             onSignedUp?()
                         }
                     }
@@ -65,6 +65,12 @@ struct TrainerSignUpMainView: View {
             }
 
         }
+        .alert("Sign Up Failed", isPresented: $viewModel.showErrorAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(viewModel.errorMessage)
+        }
+
         .tint(scheme == .dark ? .white : .black)
 
     }

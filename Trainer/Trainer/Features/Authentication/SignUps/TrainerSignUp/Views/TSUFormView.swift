@@ -1,11 +1,3 @@
-//
-//  TrainerSignUpFormView.swift
-//  Trainer
-//
-//  Created by Osvaldo Mosso on 1/27/26.
-//
-
-
 import SwiftUI
 
 struct TrainerSignUpFormView: View {
