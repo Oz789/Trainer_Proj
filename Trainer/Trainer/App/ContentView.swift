@@ -1,4 +1,3 @@
-
 import SwiftUI
 
 struct ContentView: View {
@@ -6,10 +5,12 @@ struct ContentView: View {
 
     var body: some View {
         Group {
-            if session.isLoggedIn, let role = session.role {
-                AppTabContainerView(role: role)
-            } else {
+            if session.isLoading {
+                ProgressView()
+            } else if !session.isLoggedIn {
                 RootLogInView()
+            } else {
+                AppTabContainerView(role: session.role ?? .trainer)
             }
         }
     }
@@ -19,10 +20,9 @@ struct ContentView: View {
     let tm = ThemeManager()
     tm.apply("theme.Cinder")
 
-    let session = SessionManager()
-    session.signOut()
-
+    let session = SessionManager() 
     return ContentView()
         .environmentObject(tm)
         .environmentObject(session)
 }
+

@@ -80,9 +80,14 @@ struct RootLogInView: View {
             }
 
             .navigationDestination(isPresented: $showTrainerSignUp) {
-                TrainerSignUpMainView( onSignedUp: { session.signIn(role: .trainer) }
+                TrainerSignUpMainView(
+                    onSignedUp: {
+                        showTrainerSignUp = false
+                    }
                 )
+                .environmentObject(themeManager) 
             }
+
             .navigationDestination(isPresented: $showUserSignUp) {
                 UserSignUpMainView()
                     .environmentObject(themeManager)
