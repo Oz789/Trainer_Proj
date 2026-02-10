@@ -8,6 +8,16 @@ struct TRMainClientsView: View {
 
     @State private var vm: TRMainClientsViewModel
 
+    private let tabBarClearance: CGFloat = 92
+
+    private var titleColor: Color { scheme == .dark ? t.titleColor : .black }
+    private var textPrimary: Color { scheme == .dark ? t.textPrimary : .black.opacity(0.88) }
+    private var textSecondary: Color { scheme == .dark ? t.textSecondary : .black.opacity(0.50) }
+    private var pillFill: Color { scheme == .dark ? t.segmentedFill : .black.opacity(0.06) }
+    private var cardFill: Color {
+        scheme == .dark ? t.cardBackground : .white
+    }
+
     init() {
         _vm = State(initialValue: TRMainClientsViewModel(clients: TRClient.sample))
     }
@@ -22,62 +32,13 @@ struct TRMainClientsView: View {
                 .ignoresSafeArea()
 
             VStack(spacing: 14) {
-                HStack {
-                    ProfileSettingsButton()
-                    Spacer()
+                header
 
-                    Button { } label: {
-                        Image(systemName: "slider.horizontal.3")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(t.textPrimary)
-                            .frame(width: 34, height: 34)
-                            .background(t.segmentedFill)
-                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
+                TRMainCard(fill: cardFill) {
+                    cardContent
                 }
                 .padding(.horizontal, 18)
-                .padding(.top, 8)
-
-                mainCard {
-                    VStack(spacing: 12) {
-                        Text("Clients")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundStyle(t.titleColor)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .padding(.bottom, 10)
-
-                        TRClientsSearchBar(text: $vm.searchText, placeholder: "Search")
-
-                        ScrollView(showsIndicators: false) {
-                            VStack(spacing: 0) {
-                                ForEach(vm.filteredClients.indices, id: \.self) { i in
-                                    let client = vm.filteredClients[i]
-                                    TRClientRows(
-                                        client: client,
-                                        showDivider: i < vm.filteredClients.count - 1
-                                    )
-                                }
-                            }
-                        }
-
-                        Button { } label: {
-                            Text("SHOW MORE")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(t.textSecondary)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                        }
-                        .buttonStyle(.plain)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(t.segmentedFill)
-                        )
-                        .padding(.top, 6)
-                    }
-                    .padding(16)
-                }
-                .padding(.horizontal, 18)
+                .padding(.bottom, tabBarClearance)
 
                 Spacer()
             }
@@ -86,24 +47,58 @@ struct TRMainClientsView: View {
         .navigationBarHidden(true)
     }
 
-    private func mainCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
-        content()
-            .background(
-                RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .fill(t.cardBackground)
-            )
-            .shadow(color: .black.opacity(0.22), radius: 18, x: 0, y: 14)
-    }
-}
+    private var header: some View {
+        HStack {
+            ProfileSettingsButton()
+            Spacer()
 
-struct TRMainClientsView_Previews: PreviewProvider {
-    static var previews: some View {
-        let tm = ThemeManager()
-        tm.apply("theme.Cinder") 
-        return NavigationStack {
-            TRMainClientsView(viewModel: TRMainClientsViewModel(clients: TRClient.sample))
+            Button { } label: {
+                Image(systemName: "slider.horizontal.3")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(textPrimary)
+                    .frame(width: 34, height: 34)
+                    .background(pillFill)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
+            .buttonStyle(.plain)
         }
-        .environmentObject(tm)
-        .preferredColorScheme(.dark)
+        .padding(.horizontal, 18)
+        .padding(.top, 8)
+    }
+
+    private var cardContent: some View {
+        VStack(spacing: 12) {
+            Text("Clients")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(titleColor)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.bottom, 10)
+
+            TRClientsSearchBar(text: $vm.searchText, placeholder: "Search")
+
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    ForEach(vm.filteredClients.indices, id: \.self) { i in
+                        let client = vm.filteredClients[i]
+                        TRClientRows(client: client, showDivider: i < vm.filteredClients.count - 1)
+                    }
+                }
+                .padding(.bottom, 6)
+            }
+
+            Button { } label: {
+                Text("SHOW MORE")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(textSecondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+            }
+            .buttonStyle(.plain)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(pillFill)
+            )
+            .padding(.top, 6)
+        }
     }
 }
