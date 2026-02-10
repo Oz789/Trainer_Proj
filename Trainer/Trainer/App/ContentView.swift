@@ -9,12 +9,15 @@ struct ContentView: View {
                 ProgressView()
             } else if !session.isLoggedIn {
                 RootLogInView()
+            } else if let role = session.role {
+                AppTabContainerView(role: role)
             } else {
-                AppTabContainerView(role: session.role ?? .trainer)
+                ProgressView("Finishing setup…")
             }
         }
     }
 }
+
 
 #Preview {
     let tm = ThemeManager()

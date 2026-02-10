@@ -1,4 +1,5 @@
 import Foundation
+import FirebaseAuth
 
 @MainActor
 final class TrainerSignUpViewModel: ObservableObject {
@@ -7,16 +8,11 @@ final class TrainerSignUpViewModel: ObservableObject {
         case firstName, lastName, email, password
     }
 
-    enum Route: Hashable {
-        case profile
-    }
-
     @Published var form = TrainerSignUpFormModel()
     @Published var isSubmitting: Bool = false
     @Published var showErrorAlert: Bool = false
     @Published var errorMessage: String = ""
     @Published private(set) var fieldErrors: [Field: String] = [:]
-    @Published var path: [Route] = []
 
     var canContinue: Bool {
         validate().isEmpty && !isSubmitting
@@ -39,22 +35,52 @@ final class TrainerSignUpViewModel: ObservableObject {
         return errors
     }
 
-    func validateAndContinue(onSuccess: @escaping () -> Void) {
+    func submitTrainerSignUp(onSuccess: @escaping () -> Void) {
         fieldErrors = validate()
         guard fieldErrors.isEmpty else { return }
+
         isSubmitting = true
         Task {
-            try? await Task.sleep(nanoseconds: 350_000_000)
-            isSubmitting = false
-            onSuccess()
+            do {
+                let email = form.email.trimmed.lowercased()
+                let password = form.password.trimmed
+                let uid = try await AuthService.shared.createUser(email: email, password: password)
+
+                try await UserRepository.shared.createUserDoc(
+                    uid: uid,
+                    role: .trainer,
+                    firstName: form.firstName.trimmed,
+                    lastName: form.lastName.trimmed,
+                    email: email
+                )
+
+                isSubmitting = false
+                onSuccess()
+
+            } catch {
+                isSubmitting = false
+                errorMessage = mapAuthError(error)
+                showErrorAlert = true
+            }
         }
     }
-}
 
-private extension String {
-    var trimmed: String { trimmingCharacters(in: .whitespacesAndNewlines) }
-    var isValidEmail: Bool {
-        let pattern = #"^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$"#
-        return range(of: pattern, options: [.regularExpression, .caseInsensitive]) != nil
+    private func mapAuthError(_ error: Error) -> String {
+        let ns = error as NSError
+        if ns.domain == AuthErrorDomain, let code = AuthErrorCode(rawValue: ns.code) {
+            switch code {
+            case .emailAlreadyInUse:
+                return "That email is already in use. Try logging in instead."
+            case .invalidEmail:
+                return "That email address doesn’t look valid."
+            case .weakPassword:
+                return "Your password is too weak. Try at least 6+ characters."
+            case .networkError:
+                return "Network error. Check your connection and try again."
+            default:
+                return "Couldn’t create your account. Please try again."
+            }
+        }
+        return "Something went wrong. Please try again."
     }
 }
