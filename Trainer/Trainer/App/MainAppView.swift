@@ -74,7 +74,7 @@ struct AppTabContainerView: View {
             PlaceholderScreen(title: "Home")
 
         case .appointments:
-            PlaceholderScreen(title: "")
+            TRMainAppointmentsView()
         
         case .dashboard:
             PlaceholderScreen(title: "What")
@@ -115,8 +115,11 @@ private struct PlaceholderScreen: View {
 
 #Preview("Trainer") {
     AppTabContainerView(role: .trainer)
+        .environmentObject(ThemeManager())
 }
 
 #Preview("Client") {
     AppTabContainerView(role: .client)
+        .environmentObject(ThemeManager())
 }
+
