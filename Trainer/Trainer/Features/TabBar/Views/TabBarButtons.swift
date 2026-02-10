@@ -3,6 +3,10 @@ import SwiftUI
 struct TabBarButtons: View {
     let tab: AppRoleTabs
     @Binding var selection: AppRoleTabs
+    @Environment(\.colorScheme) private var scheme
+
+    private var active: Color { scheme == .dark ? .white : .black }
+    private var inactive: Color { active.opacity(0.45) }
 
     var body: some View {
         Button {
@@ -20,7 +24,7 @@ struct TabBarButtons: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.top, 2)
-            .foregroundStyle(selection == tab ? .white : .white.opacity(0.45))
+            .foregroundStyle(selection == tab ? active : inactive)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
