@@ -1,30 +1,36 @@
-//Currently has no real search function
-
 import SwiftUI
 
 struct TRClientsSearchBar: View {
     @Binding var text: String
     let placeholder: String
 
+    @Environment(\.colorScheme) private var scheme
+
+    private var bgFill: Color {
+        scheme == .dark ? .white.opacity(0.06) : .black.opacity(0.05)
+    }
+
+    private var border: Color {
+        scheme == .dark ? .white.opacity(0.10) : .black.opacity(0.10)
+    }
+
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.55))
+                .foregroundStyle(.secondary)
 
             TextField(placeholder, text: $text)
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled(true)
-                .foregroundStyle(.white.opacity(0.92))
+                .foregroundStyle(.primary)
                 .font(.subheadline.weight(.semibold))
 
             if !text.isEmpty {
-                Button {
-                    text = ""
-                } label: {
+                Button { text = "" } label: {
                     Image(systemName: "xmark.circle.fill")
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.45))
+                        .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
             }
@@ -33,22 +39,11 @@ struct TRClientsSearchBar: View {
         .padding(.vertical, 12)
         .background(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(.white.opacity(0.05))
+                .fill(bgFill)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(.white.opacity(0.08), lineWidth: 1)
+                .stroke(border, lineWidth: 1)
         )
-    }
-}
-
-struct TRSearchBar_Previews: PreviewProvider {
-    static var previews: some View {
-        ZStack {
-            Color.black.ignoresSafeArea()
-            TRClientsSearchBar(text: .constant("morgan"), placeholder: "Search clients")
-                .padding()
-        }
-        .preferredColorScheme(.dark)
     }
 }
