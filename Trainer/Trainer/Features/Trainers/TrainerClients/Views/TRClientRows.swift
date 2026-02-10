@@ -4,27 +4,40 @@ struct TRClientRows: View {
     let client: TRClient
     let showDivider: Bool
 
+    @Environment(\.colorScheme) private var scheme
+
+    private var iconBG: Color {
+        scheme == .dark ? .white.opacity(0.10) : .black.opacity(0.06)
+    }
+
+    private var iconFG: Color {
+        scheme == .dark ? .white.opacity(0.75) : .black.opacity(0.55)
+    }
+
+    private var dividerColor: Color {
+        scheme == .dark ? .white.opacity(0.08) : .black.opacity(0.08)
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 12) {
-
                 Circle()
-                    .fill(.white.opacity(0.10))
+                    .fill(iconBG)
                     .frame(width: 34, height: 34)
                     .overlay(
                         Image(systemName: "person.fill")
                             .font(.system(size: 13, weight: .semibold))
-                            .foregroundStyle(.white.opacity(0.75))
+                            .foregroundStyle(iconFG)
                     )
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(client.name)
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white.opacity(0.90))
+                        .foregroundStyle(.primary)
 
                     Text(client.handle)
                         .font(.caption.weight(.semibold))
-                        .foregroundStyle(.white.opacity(0.45))
+                        .foregroundStyle(.secondary)
                 }
 
                 Spacer()
@@ -32,13 +45,13 @@ struct TRClientRows: View {
                 VStack(alignment: .trailing, spacing: 3) {
                     Text(String(format: "%.1f", client.score))
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.white.opacity(0.92))
+                        .foregroundStyle(.primary)
 
                     Text(String(format: "%@ %.1f",
                                 client.delta >= 0 ? "▲" : "▼",
                                 abs(client.delta)))
                         .font(.caption2.weight(.semibold))
-                        .foregroundStyle(.white.opacity(0.40))
+                        .foregroundStyle(.secondary)
                 }
             }
             .padding(.vertical, 14)
@@ -46,7 +59,7 @@ struct TRClientRows: View {
 
             if showDivider {
                 Divider()
-                    .background(.white.opacity(0.08))
+                    .overlay(dividerColor)
                     .padding(.leading, 58)
             }
         }
