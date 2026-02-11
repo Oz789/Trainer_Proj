@@ -67,3 +67,4 @@ fastlane/test_output
 # Firebase
 GoogleService-Info.plist
 Trainer/**/GoogleService-Info.plist
+
