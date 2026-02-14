@@ -1,29 +1,38 @@
 import SwiftUI
 
 struct TrainerProfileMainView: View {
+    @EnvironmentObject private var themeManager: ThemeManager
+    @EnvironmentObject private var session: SessionManager
+    @Environment(\.colorScheme) private var scheme
+
     @State private var selectedProgram: TrainerProgramCard? = nil
     @State private var showProgramOverlay = false
 
+    private var t: ThemeTokens { themeManager.tokens(for: scheme) }
     var body: some View {
         ZStack {
-            Color.gray.ignoresSafeArea()
+            background
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 18) {
+                    if session.isLoading {
+                        TProfileHeader(
+                            profileImage: .init(systemName: "person.fill"),
+                            displayName: "Loading…",
+                            handle: "@loading",
+                        )
+                        .redacted(reason: .placeholder)
+                    } else {
+                        let displayName = session.currentUser?.displayName ?? "Trainer"
+                        let handle = session.currentUser?.displayHandle ?? "@trainer"
 
-                    TProfileHeader(
-                        profileImage: .init(systemName: "person.fill"),
-                        displayName: "Oz",
-                        username: "@oz_fit",
-                        stats: [
-                            .init(value: "128", label: "Workouts"),
-                            .init(value: "1.2k", label: "Followers"),
-                            .init(value: "450", label: "Following")
-                        ]
-                    )
-
+                        TProfileHeader(
+                            profileImage: .init(systemName: "person.fill"),
+                            displayName: displayName,
+                            handle: handle,
+                        )
+                    }
                     Spacer().frame(height: 8)
-
                     TProfileProgramsInteractiveSection(
                         title: "Programs",
                         programs: TrainerProgramCard.mock
@@ -33,13 +42,12 @@ struct TrainerProfileMainView: View {
                             showProgramOverlay = true
                         }
                     }
-
                     Spacer(minLength: 10)
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 24)
+                .padding(.top, 8)
             }
-
             if showProgramOverlay, let selectedProgram {
                 ProgramGuideOverlay(
                     program: selectedProgram,
@@ -55,12 +63,48 @@ struct TrainerProfileMainView: View {
             }
         }
     }
+
+    private var background: some View {
+        LinearGradient(
+            colors: t.backgroundGradient,
+            startPoint: .top,
+            endPoint: .bottom
+        )
+        .ignoresSafeArea()
+        .overlay(
+            RadialGradient(
+                colors: [
+                    Color.black.opacity(scheme == .dark ? 0.45 : 0.10),
+                    Color.clear
+                ],
+                center: .top,
+                startRadius: 10,
+                endRadius: 520
+            )
+            .blendMode(.overlay)
+            .ignoresSafeArea()
+        )
+    }
 }
 
-#Preview("Trainer Sign Up") {
+#Preview("Trainer Profile (Dark)") {
+    let tm = ThemeManager()
+    tm.apply("theme.Cinder")
+    let sm = SessionManager()
+    return TrainerProfileMainView()
+        .environmentObject(tm)
+        .environmentObject(sm)
+        .preferredColorScheme(.dark)
+}
+
+#Preview("Trainer Profile (Light)") {
     let tm = ThemeManager()
     tm.apply("theme.green")
 
+    let sm = SessionManager()
+
     return TrainerProfileMainView()
         .environmentObject(tm)
+        .environmentObject(sm)
+        .preferredColorScheme(.light)
 }

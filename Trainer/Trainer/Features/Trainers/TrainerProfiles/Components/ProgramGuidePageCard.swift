@@ -4,7 +4,6 @@ struct ProgramGuidePageCard: View {
     let number: String
     let title: String
     let details: String
-
     var body: some View {
         RoundedRectangle(cornerRadius: 24, style: .continuous)
             .fill(.white)
