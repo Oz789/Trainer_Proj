@@ -59,7 +59,6 @@ struct TrainerHorizontalRail: View {
 
 struct TrainerRailCard: View {
     let item: TrainerRailItem
-
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: item.icon)

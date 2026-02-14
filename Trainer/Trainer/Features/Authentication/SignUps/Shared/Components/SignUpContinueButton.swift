@@ -23,7 +23,7 @@ struct SignUpContinueButton: View {
             HStack(spacing: 10) {
                 if isLoading {
                     ProgressView()
-                        .tint(themeToken.textPrimary) // usually white
+                        .tint(themeToken.textPrimary)
                 }
                 Text(title)
                     .fontWeight(.semibold)
@@ -45,4 +45,3 @@ struct SignUpContinueButton: View {
         .opacity(isDimmed ? 0.7 : 1.0)
     }
 }
-

@@ -116,7 +116,6 @@ private struct PlaceholderScreen: View {
 #Preview("Trainer") {
     AppTabContainerView(role: .trainer)
         .environmentObject(ThemeManager())
-        .preferredColorScheme(.dark)
 
 }
 

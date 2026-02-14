@@ -4,7 +4,6 @@ struct SignUpBackground: View {
     @EnvironmentObject private var themeManager: ThemeManager
 
     var body: some View {
-        // Until we map exact theme tokens, we keep this consistent and minimal.
         LinearGradient(
             colors: [Color.black, Color(white: 0.14)],
             startPoint: .top,

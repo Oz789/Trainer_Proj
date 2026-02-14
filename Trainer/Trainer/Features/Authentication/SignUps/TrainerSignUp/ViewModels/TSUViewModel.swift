@@ -59,9 +59,14 @@ final class TrainerSignUpViewModel: ObservableObject {
 
             } catch {
                 isSubmitting = false
+
+                let ns = error as NSError
+                print("SignUp error domain:", ns.domain, "code:", ns.code, "desc:", ns.localizedDescription)
+
                 errorMessage = mapAuthError(error)
                 showErrorAlert = true
             }
+
         }
     }
 
