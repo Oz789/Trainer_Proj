@@ -1,126 +1,73 @@
 import SwiftUI
 
-struct AppTabContainerView: View {
-    let role: AppUserRoles
+struct MainAppView: View {
+    @EnvironmentObject private var themeManager: ThemeManager
+    @EnvironmentObject private var sessionManager: SessionManager
 
-    @State private var selection: AppRoleTabs
-    @State private var paths: [AppRoleTabs: NavigationPath] = [:]
+    @State private var role: AppUserRoles? = nil
+    @State private var isLoadingProfile = true
+    @State private var errorMessage: String? = nil
 
-    private let centerTab: AppRoleTabs = .profile
-
-    init(role: AppUserRoles) {
-        self.role = role
-        let first = TabConfig(role: role).tabs.first ?? .home
-        _selection = State(initialValue: first)
-    }
+    private let profileService = ProfileService()
 
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
 
-            ZStack {
-                ForEach(availableTabs, id: \.self) { tab in
-                    tabStack(for: tab)
-                        .opacity(selection == tab ? 1 : 0)
-                        .allowsHitTesting(selection == tab)
+            if isLoadingProfile {
+                ProgressView()
+                    .tint(.white)
+            } else if let role {
+                MainTabContainerView(role: role)
+                    .environmentObject(themeManager)
+            } else {
+                VStack(spacing: 10) {
+                    Text("Couldn’t load your profile")
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(.white)
+
+                    if let errorMessage {
+                        Text(errorMessage)
+                            .font(.subheadline)
+                            .foregroundStyle(.white.opacity(0.6))
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 24)
+                    }
+
+                    Button("Try Again") {
+                        Task { await loadRole() }
+                    }
+                    .buttonStyle(.borderedProminent)
                 }
             }
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            TabBar(
-                tabs: availableTabs,
-                selection: $selection,
-                center: centerTab,
-                onCenterTap: { selection = centerTab }
-            )
-            .background(Color.black.ignoresSafeArea(edges: .bottom))
+        .task {
+            await loadRole()
         }
     }
 
-    private var availableTabs: [AppRoleTabs] {
-        TabConfig(role: role).tabs
-    }
+    private func loadRole() async {
+        isLoadingProfile = true
+        errorMessage = nil
+        defer { isLoadingProfile = false }
 
-    // MARK: - NavigationStack
-
-    @ViewBuilder
-    private func tabStack(for tab: AppRoleTabs) -> some View {
-        NavigationStack(path: bindingPath(for: tab)) {
-            rootView(for: tab)
-                .navigationBarTitleDisplayMode(.inline)
+        guard sessionManager.session != nil else {
+            role = nil
+            errorMessage = "No active session."
+            return
         }
-    }
 
-    private func bindingPath(for tab: AppRoleTabs) -> Binding<NavigationPath> {
-        Binding(
-            get: { paths[tab] ?? NavigationPath() },
-            set: { paths[tab] = $0 }
-        )
-    }
-
-    // MARK: - Root views
-
-    @ViewBuilder
-    private func rootView(for tab: AppRoleTabs) -> some View {
-        switch tab {
-        case .profile:
-            if role == .trainer {
-                TrainerProfileMainView()
-            } else {
-                PlaceholderScreen(title: "Client Profile")
-            }
-
-        case .home:
-            PlaceholderScreen(title: "Home")
-
-        case .appointments:
-            TRMainAppointmentsView()
-        
-        case .dashboard:
-            TRDashboardView()
-
-        case .discover:
-            PlaceholderScreen(title: "Discover")
-
-        case .clients:
-            TRMainClientsView()
-
-        case .programs:
-            PlaceholderScreen(title: "Workout Builder")
-
-        case .workouts:
-            PlaceholderScreen(title: "Workouts")
+        do {
+            let profile = try await profileService.fetchMyProfile()
+            role = (profile.role.lowercased() == "trainer") ? .trainer : .client
+        } catch {
+            role = nil
+            errorMessage = error.localizedDescription
         }
     }
 }
 
-// MARK: - Placeholder (keep private)
-
-private struct PlaceholderScreen: View {
-    let title: String
-
-    var body: some View {
-        VStack(spacing: 10) {
-            Text(title)
-                .font(.title2.weight(.semibold))
-                .foregroundStyle(.white)
-
-            Text("Replace this with your real view.")
-                .font(.subheadline)
-                .foregroundStyle(.white.opacity(0.6))
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-    }
-}
-
-#Preview("Trainer") {
-    AppTabContainerView(role: .trainer)
-        .environmentObject(ThemeManager())
-
-}
-
-#Preview("Client") {
-    AppTabContainerView(role: .client)
+#Preview("MainAppView (Trainer)") {
+    MainTabContainerView(role: .trainer)
         .environmentObject(ThemeManager())
 }
-

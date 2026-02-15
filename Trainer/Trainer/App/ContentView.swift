@@ -4,16 +4,25 @@ struct ContentView: View {
     @EnvironmentObject private var session: SessionManager
 
     var body: some View {
-        Group {
-            if session.isLoading {
-                ProgressView()
-            } else if !session.isLoggedIn {
-                RootLogInView()
-            } else if let role = session.role {
-                AppTabContainerView(role: role)
-            } else {
-                ProgressView("Finishing setup…")
-            }
+        content
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        if session.isLoading {
+            ProgressView()
+
+        } else if !session.isLoggedIn {
+            RootLogInView()
+
+        } else if let role = session.role {
+            MainTabContainerView(role: role)
+
+        } else {
+            ProgressView("Finishing setup…")
+                .task {
+                    await session.refreshProfile()
+                }
         }
     }
 }
