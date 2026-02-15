@@ -9,7 +9,7 @@ final class SessionManager: ObservableObject {
     @Published private(set) var role: AppUserRoles?
     @Published private(set) var uid: String?
     @Published private(set) var currentUser: AppUser?
-
+    
     private var authHandle: AuthStateDidChangeListenerHandle?
     private var userListener: ListenerRegistration?
     init() {
