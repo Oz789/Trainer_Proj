@@ -98,7 +98,7 @@ struct TProfileHeader: View {
 #Preview("Header Light") {
     let tm = ThemeManager()
     tm.apply("theme.green")
-
+    
     return ZStack {
         Color.white.ignoresSafeArea()
         TProfileHeader(
@@ -112,7 +112,8 @@ struct TProfileHeader: View {
             ]
         )
         .padding()
+        .environmentObject(tm)
+        .preferredColorScheme(.light)
     }
-    .environmentObject(tm)
-    .preferredColorScheme(.light)
+    
 }

@@ -23,13 +23,10 @@ struct TrainerProfileMainView: View {
                         )
                         .redacted(reason: .placeholder)
                     } else {
-                        let displayName = session.currentUser?.displayName ?? "Trainer"
-                        let handle = session.currentUser?.displayHandle ?? "@trainer"
-
                         TProfileHeader(
                             profileImage: .init(systemName: "person.fill"),
-                            displayName: displayName,
-                            handle: handle,
+                            displayName: session.profile?.displayName ?? "Trainer",
+                            handle: session.profile?.handle ?? "@trainer"
                         )
                     }
                     Spacer().frame(height: 8)

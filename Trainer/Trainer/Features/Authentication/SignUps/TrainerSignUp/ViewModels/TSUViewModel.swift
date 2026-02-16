@@ -1,5 +1,4 @@
 import Foundation
-import FirebaseAuth
 
 @MainActor
 final class TrainerSignUpViewModel: ObservableObject {
@@ -35,57 +34,74 @@ final class TrainerSignUpViewModel: ObservableObject {
         return errors
     }
 
-    func submitTrainerSignUp(onSuccess: @escaping () -> Void) {
+    func submitTrainerSignUp(session: SessionManager, onSuccess: @escaping () -> Void) async {
         fieldErrors = validate()
         guard fieldErrors.isEmpty else { return }
 
         isSubmitting = true
-        Task {
-            do {
-                let email = form.email.trimmed.lowercased()
-                let password = form.password.trimmed
-                let uid = try await AuthService.shared.createUser(email: email, password: password)
+        defer { isSubmitting = false }
 
-                try await UserRepository.shared.createUserDoc(
-                    uid: uid,
-                    role: .trainer,
-                    firstName: form.firstName.trimmed,
-                    lastName: form.lastName.trimmed,
-                    email: email
-                )
+        do {
+            let email = form.email.trimmed.lowercased()
+            let password = form.password.trimmed
+            let username = makeUsername(first: form.firstName, last: form.lastName)
 
-                isSubmitting = false
-                onSuccess()
+            try await session.signUp(
+                email: email,
+                password: password,
+                role: "trainer",
+                username: username
+            )
 
-            } catch {
-                isSubmitting = false
+            onSuccess()
 
-                let ns = error as NSError
-                print("SignUp error domain:", ns.domain, "code:", ns.code, "desc:", ns.localizedDescription)
+        } catch {
+ 
+            debugPrintSupabaseError(error, context: "Trainer Sign Up")
 
-                errorMessage = mapAuthError(error)
-                showErrorAlert = true
-            }
+            errorMessage = userFacingSupabaseErrorMessage(from: error)
 
+            showErrorAlert = true
         }
     }
 
-    private func mapAuthError(_ error: Error) -> String {
-        let ns = error as NSError
-        if ns.domain == AuthErrorDomain, let code = AuthErrorCode(rawValue: ns.code) {
-            switch code {
-            case .emailAlreadyInUse:
-                return "That email is already in use. Try logging in instead."
-            case .invalidEmail:
-                return "That email address doesn’t look valid."
-            case .weakPassword:
-                return "Your password is too weak. Try at least 6+ characters."
-            case .networkError:
-                return "Network error. Check your connection and try again."
-            default:
-                return "Couldn’t create your account. Please try again."
-            }
-        }
-        return "Something went wrong. Please try again."
+
+    private func makeUsername(first: String, last: String) -> String {
+        let f = first.trimmed.lowercased()
+        let l = last.trimmed.lowercased()
+        let raw = "\(f)\(l)"
+        return raw.replacingOccurrences(of: " ", with: "")
     }
+
+    private func mapSupabaseAuthError(_ error: Error) -> String {
+        let msg = (error as NSError).localizedDescription.lowercased()
+        if msg.contains("already") && msg.contains("registered") { return "That email is already in use. Try logging in instead." }
+        if msg.contains("invalid") && msg.contains("email") { return "That email address doesn’t look valid." }
+        if msg.contains("password") && (msg.contains("weak") || msg.contains("length")) { return "Your password is too weak. Try at least 6+ characters." }
+        if msg.contains("network") || msg.contains("internet") { return "Network error. Check your connection and try again." }
+
+        return "Couldn’t create your account. Please try again."
+    }
+}
+
+//MARK: Debug functions
+
+private func debugPrintSupabaseError(_ error: Error, context: String) {
+    let ns = error as NSError
+    print(" \(context) FAILED")
+    print("Domain:", ns.domain)
+    print("Code:", ns.code)
+    print("Description:", ns.localizedDescription)
+    print("UserInfo:", ns.userInfo)
+}
+
+private func userFacingSupabaseErrorMessage(from error: Error) -> String {
+    let ns = error as NSError
+    let message = ns.localizedDescription.trimmingCharacters(in: .whitespacesAndNewlines)
+
+    if !message.isEmpty, message.lowercased() != "the operation couldn’t be completed." {
+        return message
+    }
+
+    return "Sign up failed. Please try again."
 }

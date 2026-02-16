@@ -17,10 +17,6 @@ final class ThemeManager: ObservableObject {
             theme = SkyBlueTheme()
         case "theme.BlueHorizon":
             theme = BlueHorizonTheme()
-        case "theme.Green":
-            theme = GreenTheme()
-        case "theme.Sunrise":
-            theme = SunriseTheme()
         case "theme.Ember":
             theme = EmberTheme()
         case "theme.Cinder":
@@ -31,7 +27,7 @@ final class ThemeManager: ObservableObject {
     }
 
     var allThemes: [any AppThemeModel] {
-        [PinkTheme(), SkyBlueTheme(), BlueHorizonTheme(), GreenTheme(), SunriseTheme(), EmberTheme(), CinderTheme()]
+        [PinkTheme(), SkyBlueTheme(), BlueHorizonTheme(), EmberTheme(), CinderTheme()]
     }
 
     func tokens(for scheme: ColorScheme) -> ThemeTokens {

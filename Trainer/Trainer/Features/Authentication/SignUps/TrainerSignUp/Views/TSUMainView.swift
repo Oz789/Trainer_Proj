@@ -3,11 +3,11 @@ import SwiftUI
 struct TrainerSignUpMainView: View {
     var onSignedUp: (() -> Void)? = nil
 
+    @EnvironmentObject private var session: SessionManager
     @Environment(\.dismiss) private var dismiss
     @Environment(\.colorScheme) private var scheme
-    
+
     @StateObject private var viewModel = TrainerSignUpViewModel()
-    
     @State private var showCancelConfirm = false
 
     var body: some View {
@@ -40,8 +40,10 @@ struct TrainerSignUpMainView: View {
                         isLoading: viewModel.isSubmitting,
                         isDisabled: !viewModel.canContinue
                     ) {
-                        viewModel.submitTrainerSignUp {
-                            onSignedUp?()
+                        Task {
+                            await viewModel.submitTrainerSignUp(session: session) {
+                                onSignedUp?()
+                            }
                         }
                     }
 
@@ -56,26 +58,20 @@ struct TrainerSignUpMainView: View {
         .navigationBarBackButtonHidden(true)
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
-                Button {
-                    dismiss()
-                } label: {
+                Button { dismiss() } label: {
                     Image(systemName: "chevron.left")
                         .font(.system(size: 17, weight: .semibold))
                 }
             }
-
         }
         .alert("Sign Up Failed", isPresented: $viewModel.showErrorAlert) {
             Button("OK", role: .cancel) { }
         } message: {
             Text(viewModel.errorMessage)
         }
-
         .tint(scheme == .dark ? .white : .black)
-
     }
 }
-
 
 #Preview("Trainer Sign Up") {
     let tm = ThemeManager()
