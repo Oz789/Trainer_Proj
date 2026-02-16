@@ -1,5 +1,4 @@
 import SwiftUI
-import FirebaseAuth
 
 struct RootLogInView: View {
     @EnvironmentObject private var themeManager: ThemeManager
@@ -18,7 +17,7 @@ struct RootLogInView: View {
     @State private var alertTitle: String = ""
     @State private var alertMessage: String = ""
 
-// dev theme button to delete later
+    // dev theme button to delete later
     @State private var themeIndex: Int = 0
 
     private var trimmedEmail: String {
@@ -40,9 +39,9 @@ struct RootLogInView: View {
                             .disabled(isSubmitting)
 
                         AuthCardContent(
-                            isLoginMode: isLoginMode,
                             email: $email,
                             password: $password,
+                            isLoginMode: isLoginMode,
                             isSubmitting: isSubmitting,
                             onLogin: { Task { await handleSignIn() } },
                             onForgotPassword: { Task { await handlePasswordReset() } },
@@ -83,7 +82,6 @@ struct RootLogInView: View {
     private func handleSignIn() async {
         guard !isSubmitting else { return }
 
-        // Lightweight UX validation
         guard trimmedEmail.contains("@"), password.count >= 6 else {
             presentAlert(
                 title: "Check your info",
@@ -96,11 +94,11 @@ struct RootLogInView: View {
         defer { isSubmitting = false }
 
         do {
-            try await AuthService.shared.signIn(email: trimmedEmail, password: password)
+            try await session.signIn(email: trimmedEmail, password: password)
             // SessionManager handles routing via auth listener.
         } catch {
-            let mapped = AuthErrorMapper.displayInfo(for: error)
-            presentAlert(title: mapped.title, message: mapped.message)
+            // If you still want a mapper, make one for Supabase errors.
+            presentAlert(title: "Sign in failed", message: error.localizedDescription)
         }
     }
 
@@ -117,14 +115,13 @@ struct RootLogInView: View {
         defer { isSubmitting = false }
 
         do {
-            try await AuthService.shared.sendPasswordReset(to: trimmedEmail)
+            try await session.sendPasswordReset(to: trimmedEmail)
             presentAlert(
                 title: "Email sent",
                 message: "If an account exists for \(trimmedEmail), you’ll receive a reset email shortly."
             )
         } catch {
-            let mapped = AuthErrorMapper.displayInfo(for: error)
-            presentAlert(title: mapped.title, message: mapped.message)
+            presentAlert(title: "Couldn’t send email", message: error.localizedDescription)
         }
     }
 
@@ -135,6 +132,7 @@ struct RootLogInView: View {
         showAlert = true
     }
 }
+
 
 #Preview {
     let tm = ThemeManager()

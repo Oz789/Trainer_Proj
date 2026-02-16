@@ -49,9 +49,14 @@ final class SessionManager: ObservableObject {
         await refreshProfile()
     }
 
+
     func signIn(email: String, password: String) async throws {
         session = try await supabase.auth.signIn(email: email, password: password)
         await refreshProfile()
+    }
+    
+    func sendPasswordReset(to email: String) async throws {
+        try await supabase.auth.resetPasswordForEmail(email)
     }
 
     func signOut() async {

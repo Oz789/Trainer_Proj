@@ -1,16 +1,13 @@
 import SwiftUI
 
 struct AuthCardContent: View {
-    let isLoginMode: Bool
-
     @Binding var email: String
     @Binding var password: String
-
+    
+    let isLoginMode: Bool
     let isSubmitting: Bool
-
     let onLogin: () -> Void
     let onForgotPassword: () -> Void
-
     let onTrainerSignUp: () -> Void
     let onUserSignUp: () -> Void
 
@@ -26,16 +23,21 @@ struct AuthCardContent: View {
         Group {
             if isLoginMode {
                 VStack(spacing: 12) {
-                    LoginFormSection(email: $email, password: $password)
-                        .disabled(isSubmitting)
-
-                    AuthLoginActions(
+                    LoginFormSection(
+                        email: $email,
+                        password: $password,
                         isSubmitting: isSubmitting,
                         canSubmit: canSubmitLogin,
-                        canReset: !trimmedEmail.isEmpty,
-                        onLogin: onLogin,
-                        onForgotPassword: onForgotPassword
+                        onLogin: onLogin
                     )
+                    .disabled(isSubmitting)
+
+                    Button(action: onForgotPassword) {
+                        Text("Forgot password?")
+                            .font(.footnote.weight(.semibold))
+                            .foregroundStyle(.white.opacity(0.75))
+                    }
+                    .disabled(isSubmitting || trimmedEmail.isEmpty)
                 }
             } else {
                 SignUpRoleSection(
@@ -50,18 +52,3 @@ struct AuthCardContent: View {
     }
 }
 
-#Preview {
-    AuthCardContent(
-        isLoginMode: true,
-        email: .constant("test@email.com"),
-        password: .constant("password"),
-        isSubmitting: false,
-        onLogin: {},
-        onForgotPassword: {},
-        onTrainerSignUp: {},
-        onUserSignUp: {}
-    )
-    .padding()
-    .background(Color.black)
-    .preferredColorScheme(.dark)
-}
