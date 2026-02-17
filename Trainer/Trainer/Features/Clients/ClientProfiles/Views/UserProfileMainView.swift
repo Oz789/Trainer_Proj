@@ -7,17 +7,17 @@ struct UserProfileMainView: View {
         NavigationStack {
             ZStack {
                 Color.black.ignoresSafeArea()
-
                 VStack(spacing: 14) {
                     if session.isLoading {
                         ProgressView()
                             .tint(.white)
-
+                        
                         Text("Loading profile…")
                             .font(.footnote)
                             .foregroundStyle(.white.opacity(0.7))
 
                     } else if let profile = session.profile {
+                        ProfileSettingsButton()
                         Circle()
                             .fill(Color.white.opacity(0.10))
                             .frame(width: 92, height: 92)

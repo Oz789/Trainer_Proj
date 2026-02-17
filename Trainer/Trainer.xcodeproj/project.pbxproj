@@ -7,8 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4E965C282F3BC69200F49727 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 4E965C272F3BC69200F49727 /* FirebaseAuth */; };
-		4E965C2A2F3BC69200F49727 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 4E965C292F3BC69200F49727 /* FirebaseFirestore */; };
 		4EA8C31D2F424D400023812C /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 4EA8C31C2F424D400023812C /* Auth */; };
 		4EA8C31F2F424D400023812C /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 4EA8C31E2F424D400023812C /* Supabase */; };
 /* End PBXBuildFile section */
@@ -31,8 +29,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				4EA8C31F2F424D400023812C /* Supabase in Frameworks */,
-				4E965C282F3BC69200F49727 /* FirebaseAuth in Frameworks */,
-				4E965C2A2F3BC69200F49727 /* FirebaseFirestore in Frameworks */,
 				4EA8C31D2F424D400023812C /* Auth in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -76,8 +72,6 @@
 			);
 			name = Trainer;
 			packageProductDependencies = (
-				4E965C272F3BC69200F49727 /* FirebaseAuth */,
-				4E965C292F3BC69200F49727 /* FirebaseFirestore */,
 				4EA8C31C2F424D400023812C /* Auth */,
 				4EA8C31E2F424D400023812C /* Supabase */,
 			);
@@ -110,7 +104,6 @@
 			mainGroup = 4EC65A402F27DC4A0093236F;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				4E965C262F3BC69200F49727 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				4EA8C31B2F424D400023812C /* XCRemoteSwiftPackageReference "supabase-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -345,14 +338,6 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
-		4E965C262F3BC69200F49727 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 12.9.0;
-			};
-		};
 		4EA8C31B2F424D400023812C /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/supabase-community/supabase-swift.git";
@@ -364,16 +349,6 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		4E965C272F3BC69200F49727 /* FirebaseAuth */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 4E965C262F3BC69200F49727 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAuth;
-		};
-		4E965C292F3BC69200F49727 /* FirebaseFirestore */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 4E965C262F3BC69200F49727 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseFirestore;
-		};
 		4EA8C31C2F424D400023812C /* Auth */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 4EA8C31B2F424D400023812C /* XCRemoteSwiftPackageReference "supabase-swift" */;
