@@ -84,9 +84,13 @@ struct MainTabContainerView: View {
 
         case .dashboard:
             TRDashboardView()
-
+            
         case .discover:
-            PlaceholderScreen(title: "Discover")
+            TrainerDiscoverView(
+                viewModel: TrainerDiscoverViewModel(
+                    service: TrainerConnectionService(client: supabase)
+                )
+            )
 
         case .clients:
             TRMainClientsView()
