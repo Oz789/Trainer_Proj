@@ -2,6 +2,8 @@ import SwiftUI
 
 struct UserSignUpMainView: View {
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var session: SessionManager
+
     @StateObject private var viewModel = UserSignUpViewModel()
     @State private var showCancelConfirm = false
 
@@ -36,6 +38,7 @@ struct UserSignUpMainView: View {
                 case .details:
                     ZStack {
                         SignUpBackground()
+
                         ScrollView {
                             VStack(spacing: 18) {
                                 Spacer().frame(height: 40)
@@ -44,7 +47,9 @@ struct UserSignUpMainView: View {
                                     form: $viewModel.form,
                                     isSubmitting: viewModel.isSubmitting,
                                     onBack: { viewModel.backFromDetails() },
-                                    onFinish: { viewModel.finish() }
+                                    onFinish: {
+                                        Task { await viewModel.finish(session: session) }
+                                    }
                                 )
 
                                 Spacer(minLength: 20)
@@ -57,9 +62,9 @@ struct UserSignUpMainView: View {
                     .hideKeyboardOnTap()
                     .navigationBarBackButtonHidden(true)
 
-
                 case .profile:
                     UserProfileMainView()
+                        .environmentObject(session)
                 }
             }
             .toolbar {
@@ -84,6 +89,10 @@ struct UserSignUpMainView: View {
     let tm = ThemeManager()
     tm.apply("theme.horizon")
 
+    let session = SessionManager()
+
     return UserSignUpMainView()
         .environmentObject(tm)
+        .environmentObject(session)
+        .preferredColorScheme(.dark)
 }

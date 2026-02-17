@@ -49,7 +49,7 @@ struct TabConfig {
         case .trainer:
             return [.dashboard, .appointments, .profile, .clients, .workouts]
         case .client:
-            return [.profile, .workouts, .appointments]
+            return [.profile, .workouts, .discover]
         }
     }
 }

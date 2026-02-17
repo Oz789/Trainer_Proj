@@ -6,7 +6,10 @@ struct MainTabContainerView: View {
     @State private var selection: AppRoleTabs
     @State private var paths: [AppRoleTabs: NavigationPath] = [:]
 
-    private let centerTab: AppRoleTabs = .profile
+    private var centerTab: AppRoleTabs? {
+        role == .trainer ? .profile : nil
+    }
+
 
     init(role: AppUserRoles) {
         self.role = role
@@ -31,10 +34,13 @@ struct MainTabContainerView: View {
                 tabs: availableTabs,
                 selection: $selection,
                 center: centerTab,
-                onCenterTap: { selection = centerTab }
+                onCenterTap: {
+                    if let centerTab { selection = centerTab }
+                }
             )
             .background(Color.black.ignoresSafeArea(edges: .bottom))
         }
+
     }
 
     private var availableTabs: [AppRoleTabs] {
@@ -67,7 +73,7 @@ struct MainTabContainerView: View {
             if role == .trainer {
                 TrainerProfileMainView()
             } else {
-                PlaceholderScreen(title: "Client Profile")
+                UserProfileMainView()
             }
 
         case .home:
@@ -113,12 +119,3 @@ private struct PlaceholderScreen: View {
     }
 }
 
-#Preview("Trainer Tabs") {
-    MainTabContainerView(role: .trainer)
-        .environmentObject(ThemeManager())
-}
-
-#Preview("Client Tabs") {
-    MainTabContainerView(role: .client)
-        .environmentObject(ThemeManager())
-}
