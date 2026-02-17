@@ -45,20 +45,42 @@ final class UserSignUpViewModel: ObservableObject {
         path.append(.details)
     }
 
-    func finish() {
-        fieldErrors = validateBasic()
-        guard fieldErrors.isEmpty else { return }
-
-        isSubmitting = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-            self.isSubmitting = false
-            self.path.append(.profile)
-        }
-    }
-
     func backFromDetails() {
         guard !path.isEmpty else { return }
         path.removeLast()
     }
-}
 
+    func finish(session: SessionManager) async {
+        fieldErrors = validateBasic()
+        guard fieldErrors.isEmpty else { return }
+
+        isSubmitting = true
+        defer { isSubmitting = false }
+
+        do {
+            let email = form.email.trimmed.lowercased()
+            let password = form.password.trimmed
+            let username = makeUsername()
+
+            try await session.signUp(
+                email: email,
+                password: password,
+                role: "client",
+                username: username
+            )
+
+            path.append(.profile)
+        } catch {
+            errorMessage = error.localizedDescription
+            showErrorAlert = true
+        }
+    }
+
+    private func makeUsername() -> String {
+        let f = form.firstName.trimmed.lowercased()
+        let l = form.lastName.trimmed.lowercased()
+
+        let joined = ([f, l].filter { !$0.isEmpty }).joined(separator: "")
+        return joined.isEmpty ? "user" : joined
+    }
+}

@@ -4,54 +4,94 @@ struct TabBar: View {
     let tabs: [AppRoleTabs]
     @Binding var selection: AppRoleTabs
 
-    let center: AppRoleTabs
+    let center: AppRoleTabs?
     let onCenterTap: () -> Void
 
     var body: some View {
-        GeometryReader { proxy in
-            let safeBottom = proxy.safeAreaInsets.bottom
+        ZStack(alignment: .bottom) {
+            barBackground
 
-            ZStack(alignment: .bottom) {
-                TabBarBackground()
-                    .frame(height: 64 + safeBottom)
-                    .ignoresSafeArea(edges: .bottom)
-
+            if let center {
                 HStack(spacing: 0) {
-                    ForEach(leftTabs, id: \.self) { tab in
-                        TabBarButtons(tab: tab, selection: $selection)
+                    ForEach(leftTabs(center: center), id: \.self) { tab in
+                        tabButton(tab)
                     }
 
-                    Color.clear
-                        .frame(width: 78)
+                    Color.clear.frame(width: 72)
 
-                    ForEach(rightTabs, id: \.self) { tab in
-                        TabBarButtons(tab: tab, selection: $selection)
+                    ForEach(rightTabs(center: center), id: \.self) { tab in
+                        tabButton(tab)
                     }
                 }
-                .frame(height: 64)
-                .padding(.bottom, safeBottom == 0 ? 8 : (safeBottom - 2))
+                .frame(height: 50)
+                .padding(.bottom, 6)
 
-                TabCenterButton(isSelected: selection == center) {
-                    selection = center
+                centerButton(center)
+            } else {
+                HStack(spacing: 0) {
+                    ForEach(tabs, id: \.self) { tab in
+                        tabButton(tab)
+                    }
                 }
-                .offset(y: -22)
-
+                .frame(height: 50)
+                .padding(.bottom, 6)
             }
         }
-        .frame(height: 50)
     }
 
-    // MARK: - Logic
+    // MARK: - Layout helpers
 
-    private var leftTabs: [AppRoleTabs] {
-        let filtered = tabs.filter { $0 != center }
-        let mid = filtered.count / 2
-        return Array(filtered.prefix(mid))
+    private func leftTabs(center: AppRoleTabs) -> [AppRoleTabs] {
+        let others = tabs.filter { $0 != center }
+        let mid = others.count / 2
+        return Array(others.prefix(mid))
     }
 
-    private var rightTabs: [AppRoleTabs] {
-        let filtered = tabs.filter { $0 != center }
-        let mid = filtered.count / 2
-        return Array(filtered.suffix(from: mid))
+    private func rightTabs(center: AppRoleTabs) -> [AppRoleTabs] {
+        let others = tabs.filter { $0 != center }
+        let mid = others.count / 2
+        return Array(others.suffix(from: mid))
+    }
+
+    // MARK: - Pieces (use your existing implementations)
+
+    private var barBackground: some View {
+        Rectangle()
+            .fill(Color.black.opacity(0.92))
+            .frame(height: 80)
+            .ignoresSafeArea(edges: .bottom)
+    }
+
+    private func tabButton(_ tab: AppRoleTabs) -> some View {
+        Button {
+            selection = tab
+        } label: {
+            VStack(spacing: 4) {
+                Image(systemName: tab.systemImage)
+                    .font(.system(size: 18, weight: .semibold))
+                Text(tab.title)
+                    .font(.caption2)
+            }
+            .foregroundStyle(selection == tab ? .white : .white.opacity(0.45))
+            .frame(maxWidth: .infinity)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+
+    private func centerButton(_ tab: AppRoleTabs) -> some View {
+        Button(action: onCenterTap) {
+            ZStack {
+                Circle()
+                    .fill(Color.white.opacity(0.12))
+                    .frame(width: 62, height: 62)
+
+                Image(systemName: tab.systemImage)
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundStyle(.white)
+            }
+        }
+        .buttonStyle(.plain)
+        .offset(y: -26)
     }
 }
