@@ -5,7 +5,6 @@ enum ThemeSurfaceStyle: String, CaseIterable, Identifiable {
     case matte
 
     var id: String { rawValue }
-
     var displayName: String {
         switch self {
         case .glass: return "Glass"
@@ -16,7 +15,6 @@ enum ThemeSurfaceStyle: String, CaseIterable, Identifiable {
 
 struct ThemeTokens {
     var surfaceStyle: ThemeSurfaceStyle = .glass
-
     var backgroundGradient: [Color]
 
     var titleColor: Color

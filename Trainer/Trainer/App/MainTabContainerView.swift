@@ -2,15 +2,12 @@ import SwiftUI
 
 struct MainTabContainerView: View {
     let role: AppUserRoles
-
     @State private var selection: AppRoleTabs
     @State private var paths: [AppRoleTabs: NavigationPath] = [:]
 
     private var centerTab: AppRoleTabs? {
         role == .trainer ? .profile : nil
     }
-
-
     init(role: AppUserRoles) {
         self.role = role
         let first = TabConfig(role: role).tabs.first ?? .home
@@ -104,7 +101,7 @@ struct MainTabContainerView: View {
     }
 }
 
-// MARK: - Placeholder 
+// MARK: - Placeholder - delete later after all tabs have a real screen
 
 private struct PlaceholderScreen: View {
     let title: String
