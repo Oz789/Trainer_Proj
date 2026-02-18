@@ -28,8 +28,8 @@ struct MainTabContainerView: View {
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             TabBar(
-                tabs: availableTabs,
                 selection: $selection,
+                tabs: availableTabs,
                 center: centerTab,
                 onCenterTap: {
                     if let centerTab { selection = centerTab }
