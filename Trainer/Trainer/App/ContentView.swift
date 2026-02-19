@@ -9,7 +9,7 @@ struct ContentView: View {
         } else if !session.isLoggedIn {
             RootLogInView()
         } else if let role = session.role {
-            MainTabContainerView(role: role)
+            TabsContainerView(role: role)
         } else {
             ProgressView("Finishing setup…")
                 .task {

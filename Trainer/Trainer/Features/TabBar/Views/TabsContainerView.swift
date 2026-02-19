@@ -1,13 +1,12 @@
 import SwiftUI
 
-struct MainTabContainerView: View {
-    let role: AppUserRoles
+struct TabsContainerView: View {
     @State private var selection: AppRoleTabs
     @State private var paths: [AppRoleTabs: NavigationPath] = [:]
-
-    private var centerTab: AppRoleTabs? {
-        role == .trainer ? .profile : nil
-    }
+    private var centerTab: AppRoleTabs? { role == .trainer ? .profile : nil }
+    private var availableTabs: [AppRoleTabs] { TabConfig(role: role).tabs }
+    let role: AppUserRoles
+    
     init(role: AppUserRoles) {
         self.role = role
         let first = TabConfig(role: role).tabs.first ?? .home
@@ -17,7 +16,7 @@ struct MainTabContainerView: View {
     var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
-
+        //MARK: this makes it so EVERY tab is always LIVE but we can only see and touch the active tab (opacity/hitTesting)
             ZStack {
                 ForEach(availableTabs, id: \.self) { tab in
                     tabStack(for: tab)
@@ -39,13 +38,35 @@ struct MainTabContainerView: View {
         }
 
     }
-
-    private var availableTabs: [AppRoleTabs] {
-        TabConfig(role: role).tabs
+    
+    // MARK: - Root view for each tab
+    @ViewBuilder
+    private func rootView(for tab: AppRoleTabs) -> some View {
+        
+        switch tab {
+            
+        case .profile:
+            if role == .trainer { TrainerProfileMainView()
+            } else { UserProfileMainView() }
+            
+        case .home: PlaceholderScreen(title: "Home")
+            
+        case .appointments: TRMainAppointmentsView()
+            
+        case .dashboard:TRDashboardView()
+            
+        case .discover: TrainerDiscoverView(
+                viewModel: TrainerDiscoverViewModel(service: TrainerConnectionService(client: supabase)))
+            
+        case .clients: TRMainClientsView()
+            
+        case .programs: PlaceholderScreen(title: "Workout Builder")
+            
+        case .workouts: PlaceholderScreen(title: "Workouts")
+        }
     }
-
-    // MARK: - NavigationStack
-
+    
+    // MARK: - NavigationStack for each individual tab to remain persistent
     @ViewBuilder
     private func tabStack(for tab: AppRoleTabs) -> some View {
         NavigationStack(path: bindingPath(for: tab)) {
@@ -53,56 +74,15 @@ struct MainTabContainerView: View {
                 .navigationBarTitleDisplayMode(.inline)
         }
     }
-
     private func bindingPath(for tab: AppRoleTabs) -> Binding<NavigationPath> {
         Binding(
             get: { paths[tab] ?? NavigationPath() },
             set: { paths[tab] = $0 }
         )
     }
-
-    // MARK: - Root views
-
-    @ViewBuilder
-    private func rootView(for tab: AppRoleTabs) -> some View {
-        switch tab {
-        case .profile:
-            if role == .trainer {
-                TrainerProfileMainView()
-            } else {
-                UserProfileMainView()
-            }
-
-        case .home:
-            PlaceholderScreen(title: "Home")
-
-        case .appointments:
-            TRMainAppointmentsView()
-
-        case .dashboard:
-            TRDashboardView()
-            
-        case .discover:
-            TrainerDiscoverView(
-                viewModel: TrainerDiscoverViewModel(
-                    service: TrainerConnectionService(client: supabase)
-                )
-            )
-
-        case .clients:
-            TRMainClientsView()
-
-        case .programs:
-            PlaceholderScreen(title: "Workout Builder")
-
-        case .workouts:
-            PlaceholderScreen(title: "Workouts")
-        }
-    }
-}
+ }
 
 // MARK: - Placeholder - delete later after all tabs have a real screen
-
 private struct PlaceholderScreen: View {
     let title: String
 
@@ -119,4 +99,3 @@ private struct PlaceholderScreen: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 }
-
