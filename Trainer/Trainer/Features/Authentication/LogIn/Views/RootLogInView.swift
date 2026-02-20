@@ -4,143 +4,96 @@ struct RootLogInView: View {
     @EnvironmentObject private var themeManager: ThemeManager
     @EnvironmentObject private var session: SessionManager
     @Environment(\.colorScheme) private var scheme
+    @StateObject private var vm = RootLogInViewModel()
+
+    #if DEBUG
+    @State private var devThemeIndex: Int = 0
+    #endif
 
     private var themeToken: ThemeTokens { themeManager.tokens(for: scheme) }
 
-    @State private var isLoginMode: Bool = true
-    @State private var email: String = ""
-    @State private var password: String = ""
-    @State private var showTrainerSignUp = false
-    @State private var showUserSignUp = false
-    @State private var isSubmitting: Bool = false
-    @State private var showAlert: Bool = false
-    @State private var alertTitle: String = ""
-    @State private var alertMessage: String = ""
-
-    // dev theme button to delete later
-    @State private var themeIndex: Int = 0
-
-    private var trimmedEmail: String {
-        email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    private var canSubmitLogin: Bool {
+        vm.trimmedEmail.contains("@") && vm.password.count >= 6 && !vm.isSubmitting
     }
 
     var body: some View {
         NavigationStack {
             ZStack {
-                AuthBackgroundView(themeToken: themeToken)
+                //Bacckground
+                LinearGradient(
+                    colors: themeToken.backgroundGradient,
+                    startPoint: UnitPoint(x: 0.5, y: 0.10),
+                    endPoint: UnitPoint(x: 0.5, y: 0.95)
+                )
+                .ignoresSafeArea()
 
                 VStack {
                     Spacer()
-
+                    //Header
                     VStack(spacing: 18) {
-                        AuthHeaderView(titleColor: themeToken.titleColor)
+                        Text("TRAINER")
+                            .font(.system(size: 38, weight: .bold))
+                            .foregroundColor(themeToken.titleColor)
+                        //Pill Switcher
+                        LogInSignUpPills(isLoginMode: $vm.isLoginMode)
+                            .disabled(vm.isSubmitting)
+                        
+                        //Log in Section
+                        if vm.isLoginMode {
+                            VStack(spacing: 12) {
+                                LoginFormSection(
+                                    email: $vm.email,
+                                    password: $vm.password,
+                                    isSubmitting: vm.isSubmitting,
+                                    canSubmit: canSubmitLogin,
+                                    onLogin: { Task { await vm.signIn(session: session) } }
+                                )
+                                .disabled(vm.isSubmitting)
 
-                        LogInSegments(isLoginMode: $isLoginMode)
-                            .disabled(isSubmitting)
-
-                        AuthCardContent(
-                            email: $email,
-                            password: $password,
-                            isLoginMode: isLoginMode,
-                            isSubmitting: isSubmitting,
-                            onLogin: { Task { await handleSignIn() } },
-                            onForgotPassword: { Task { await handlePasswordReset() } },
-                            onTrainerSignUp: { showTrainerSignUp = true },
-                            onUserSignUp: { showUserSignUp = true }
-                        )
+                                Button {
+                                    Task { await vm.sendPasswordReset(session: session) }
+                                } label: {
+                                    Text("Forgot password?")
+                                        .font(.footnote.weight(.semibold))
+                                        .foregroundStyle(.white.opacity(0.75))
+                                }
+                                .disabled(vm.isSubmitting || vm.trimmedEmail.isEmpty)
+                            }
+                        } else {
+                            //Sign up Section
+                            SignUpRoleButtons(
+                                onTrainer: { vm.showTrainerSignUp = true },
+                                onUser: { vm.showUserSignUp = true }
+                            )
+                            .disabled(vm.isSubmitting)
+                        }
                     }
 
                     Spacer()
                 }
                 .padding(.horizontal, 22)
 
-                DevThemeCycleButton(
-                    isSubmitting: isSubmitting,
+                #if DEBUG
+                DevThemeOverlay(
+                    isDisabled: vm.isSubmitting,
                     themeManager: themeManager,
-                    themeIndex: $themeIndex
+                    themeIndex: $devThemeIndex
                 )
+                #endif
             }
-            .alert(alertTitle, isPresented: $showAlert) {
+            .alert(vm.alertTitle, isPresented: $vm.showAlert) {
                 Button("OK", role: .cancel) { }
             } message: {
-                Text(alertMessage)
+                Text(vm.alertMessage)
             }
-            .navigationDestination(isPresented: $showTrainerSignUp) {
-                TrainerSignUpMainView(onSignedUp: { showTrainerSignUp = false })
+            .navigationDestination(isPresented: $vm.showTrainerSignUp) {
+                TrainerSignUpMainView(onSignedUp: { vm.showTrainerSignUp = false })
                     .environmentObject(themeManager)
             }
-            .navigationDestination(isPresented: $showUserSignUp) {
+            .navigationDestination(isPresented: $vm.showUserSignUp) {
                 UserSignUpMainView()
                     .environmentObject(themeManager)
             }
         }
     }
-
-    // MARK: - Actions
-
-    @MainActor
-    private func handleSignIn() async {
-        guard !isSubmitting else { return }
-
-        guard trimmedEmail.contains("@"), password.count >= 6 else {
-            presentAlert(
-                title: "Check your info",
-                message: "Enter a valid email and a password that’s at least 6 characters."
-            )
-            return
-        }
-
-        isSubmitting = true
-        defer { isSubmitting = false }
-
-        do {
-            try await session.signIn(email: trimmedEmail, password: password)
-            // SessionManager handles routing via auth listener.
-        } catch {
-            // If you still want a mapper, make one for Supabase errors.
-            presentAlert(title: "Sign in failed", message: error.localizedDescription)
-        }
-    }
-
-    @MainActor
-    private func handlePasswordReset() async {
-        guard !isSubmitting else { return }
-
-        guard !trimmedEmail.isEmpty else {
-            presentAlert(title: "Enter your email", message: "Type your email above, then tap “Forgot password?”.")
-            return
-        }
-
-        isSubmitting = true
-        defer { isSubmitting = false }
-
-        do {
-            try await session.sendPasswordReset(to: trimmedEmail)
-            presentAlert(
-                title: "Email sent",
-                message: "If an account exists for \(trimmedEmail), you’ll receive a reset email shortly."
-            )
-        } catch {
-            presentAlert(title: "Couldn’t send email", message: error.localizedDescription)
-        }
-    }
-
-    @MainActor
-    private func presentAlert(title: String, message: String) {
-        alertTitle = title
-        alertMessage = message
-        showAlert = true
-    }
-}
-
-
-#Preview {
-    let tm = ThemeManager()
-    tm.apply("theme.Cinder")
-
-    let session = SessionManager()
-    return RootLogInView()
-        .environmentObject(tm)
-        .environmentObject(session)
-        .preferredColorScheme(.dark)
 }

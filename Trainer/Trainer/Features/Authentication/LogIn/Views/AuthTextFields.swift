@@ -1,19 +1,13 @@
 import SwiftUI
 
-struct GlassField: View {
+struct AuthTextField: View {
     @EnvironmentObject private var themeManager: ThemeManager
     @Environment(\.colorScheme) private var scheme
-
-    private var themeToken: ThemeTokens {
-        themeManager.tokens(for: scheme)
-    }
-
-
-    let placeholder: String
-    @Binding var text: String
-    let isSecure: Bool
-
     @FocusState private var isFocused: Bool
+    @Binding var text: String
+    private var themeToken: ThemeTokens { themeManager.tokens(for: scheme) }
+    let placeholder: String
+    let isSecure: Bool
 
     var body: some View {
         ZStack(alignment: .leading) {
@@ -56,8 +50,8 @@ struct GlassField: View {
 
 #Preview("GlassField") {
     VStack(spacing: 14) {
-        GlassField(placeholder: "Email", text: .constant(""), isSecure: false)
-        GlassField(placeholder: "Password", text: .constant(""), isSecure: true)
+        AuthTextField(text: .constant(""), placeholder: "Email", isSecure: false)
+        AuthTextField(text: .constant(""), placeholder: "Password", isSecure: true)
     }
     .padding()
     .environmentObject(ThemeManager())
