@@ -1,14 +1,10 @@
 import SwiftUI
 
-struct LogInSegments: View {
+struct LogInSignUpPills: View {
     @EnvironmentObject private var themeManager: ThemeManager
     @Environment(\.colorScheme) private var scheme
-
-    private var themeToken: ThemeTokens {
-        themeManager.tokens(for: scheme)
-    }
-
     @Binding var isLoginMode: Bool
+    private var themeToken: ThemeTokens { themeManager.tokens(for: scheme)}
 
     var body: some View {
         Picker("", selection: $isLoginMode) {
@@ -30,10 +26,3 @@ struct LogInSegments: View {
     }
 }
 
-#Preview {
-    LogInSegments(isLoginMode: .constant(true))
-        .padding()
-        .background(Color.black)
-        .environmentObject(ThemeManager())
-        .preferredColorScheme(.dark)
-}

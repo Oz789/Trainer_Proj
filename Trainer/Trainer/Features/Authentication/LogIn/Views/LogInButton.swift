@@ -1,13 +1,9 @@
 import SwiftUI
 
-struct LogInCTAButton: View {
+struct LogInButton: View {
     @EnvironmentObject private var themeManager: ThemeManager
     @Environment(\.colorScheme) private var scheme
-
-    private var themeToken: ThemeTokens {
-        themeManager.tokens(for: scheme)
-    }
-
+    private var themeToken: ThemeTokens { themeManager.tokens(for: scheme) }
     let title: String
     var height: CGFloat = 54
     let action: () -> Void
@@ -29,7 +25,7 @@ struct LogInCTAButton: View {
 }
 
 #Preview {
-    LogInCTAButton(title: "Log In") {}
+    LogInButton(title: "Log In") {}
         .padding()
         .background(Color.black)
         .environmentObject(ThemeManager())
