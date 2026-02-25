@@ -1,14 +1,4 @@
-//
-//  TRInputField.swift
-//  Trainer
-//
-//  Created by Osvaldo Mosso on 2/23/26.
-//
-
-
 import SwiftUI
-
-// MARK: - Shared UI Components
 
 struct TRInputField: View {
     let placeholder: String

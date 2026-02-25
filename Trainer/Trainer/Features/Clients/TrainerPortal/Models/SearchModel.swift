@@ -1,6 +1,6 @@
 import Foundation
 
-struct TrainerPublic: Codable, Identifiable, Equatable {
+struct TrainerPublic: Codable, Identifiable, Hashable {
     let id: UUID
     let username: String
 }

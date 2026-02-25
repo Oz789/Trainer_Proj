@@ -1,26 +1,24 @@
 import SwiftUI
 
 struct TrainerPublicProfileView: View {
-    /// Public trainer data returned from Discover search
-    let trainer: TrainerPublic?
-
-    /// Hook this up later to open your request form flow
-    var onRequestTraining: (() -> Void)? = nil
-
+    @EnvironmentObject private var session: SessionManager
     @Environment(\.colorScheme) private var scheme
+    @State private var showRequestForm = false
+    let trainer: TrainerPublic?
+    var onRequestTraining: (() -> Void)? = nil
 
     var body: some View {
         ZStack {
             background
-
+            
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 16) {
                     header
-
+                    
                     infoCard
-
+                    
                     requestCTA
-
+                    
                     Spacer(minLength: 24)
                 }
                 .padding(.horizontal, 16)
@@ -30,7 +28,27 @@ struct TrainerPublicProfileView: View {
         }
         .navigationTitle("Trainer")
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showRequestForm) {
+            if let trainer {
+                let service = SupabaseTrainerRequestService(
+                    client: supabase,
+                    currentUserId: { session.session?.user.id }
+                )
+                
+                let vm = TrainerRequestFormViewModel(
+                    trainer: trainer,
+                    service: service
+                )
+                
+                TrainerRequestThreeStepFormView { payload in
+                    vm.payload = payload
+                    Task { await vm.submit() }
+                }
+                .preferredColorScheme(.dark)
+            }
+        }
     }
+
 
     // MARK: - Sections
 
@@ -103,7 +121,7 @@ struct TrainerPublicProfileView: View {
                 .foregroundStyle(.secondary)
 
             Button {
-                onRequestTraining?()
+                showRequestForm = true
             } label: {
                 HStack(spacing: 10) {
                     Image(systemName: "paperplane.fill")
