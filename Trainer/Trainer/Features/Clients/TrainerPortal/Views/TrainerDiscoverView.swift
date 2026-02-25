@@ -3,46 +3,52 @@ import Supabase
 
 struct TrainerDiscoverView: View {
     @StateObject private var vm: TrainerDiscoverViewModel
+    @State private var selectedTrainer: TrainerPublic? = nil
 
     init(viewModel: TrainerDiscoverViewModel) {
         _vm = StateObject(wrappedValue: viewModel)
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            header
+        NavigationStack {
+            VStack(alignment: .leading, spacing: 14) {
+                header
+                searchField
 
-            searchField
+                if let err = vm.errorMessage {
+                    Text(err)
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
 
-            if let err = vm.errorMessage {
-                Text(err)
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
+                if vm.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Text("Enter the trainer’s **exact** name or **exact** handle (example: **@OzTrainer**).")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 4)
+                } else if vm.isSearching {
+                    Text("Searching…")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 4)
+                } else if vm.result == nil {
+                    Text("No match.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                        .padding(.top, 4)
+                } else {
+                    resultCard
+                }
+
+                Spacer(minLength: 0)
             }
-
-            if vm.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                Text("Enter the trainer’s **exact** name or **exact** handle (example: **@OzTrainer**).")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .padding(.top, 4)
-            } else if vm.isSearching {
-                Text("Searching…")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .padding(.top, 4)
-            } else if vm.result == nil {
-                Text("No match.")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-                    .padding(.top, 4)
-            } else {
-                resultCard
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+            .navigationDestination(item: $selectedTrainer) { trainer in
+                TrainerPublicProfileView(trainer: trainer)
             }
-
-            Spacer(minLength: 0)
+            
         }
-        .padding(.horizontal, 20)
-        .padding(.top, 16)
     }
 
     private var header: some View {
@@ -116,15 +122,13 @@ struct TrainerDiscoverView: View {
                 }
 
                 Spacer()
-
                 Button {
-                    Task { await vm.requestTrainer() }
+                    selectedTrainer = t
                 } label: {
-                    Text(vm.isRequesting ? "Requesting…" : "Request")
+                    Text("View")
                         .font(.subheadline.weight(.semibold))
                 }
                 .buttonStyle(.borderedProminent)
-                .disabled(vm.isRequesting)
             }
             .padding(14)
             .background(

@@ -1,85 +1,112 @@
 import Foundation
 
-// MARK: - Payload (what the client fills out)
-
 struct TrainerRequestPayload: Codable, Hashable {
-    var goal: TrainingGoal
-    var daysPerWeek: Int
-    var equipment: EquipmentAccess
-    var injuriesOrLimitations: String
+    var age: Int?
+    var sex: Sex
+    var heightFeet: Int?
+    var heightInches: Int?
+    var experience: Experience
+    var goalPreset: GoalPreset
+    var goalCustom: String?
+    var timeframe: String
+    var injuries: String
+    var conditions: String
+    var availabilityDaysPerWeek: Int
+    var equipment: Equipment
+
     var notes: String
 
     init(
-        goal: TrainingGoal = .hypertrophy,
-        daysPerWeek: Int = 3,
-        equipment: EquipmentAccess = .gym,
-        injuriesOrLimitations: String = "",
+        age: Int? = nil,
+        sex: Sex = .unspecified,
+        heightFeet: Int? = nil,
+        heightInches: Int? = nil,
+        experience: Experience = .beginner,
+        goalPreset: GoalPreset = .hypertrophy,
+        goalCustom: String? = nil,
+        timeframe: String = "",
+        injuries: String = "",
+        conditions: String = "",
+        availabilityDaysPerWeek: Int = 3,
+        equipment: Equipment = .gym,
         notes: String = ""
     ) {
-        self.goal = goal
-        self.daysPerWeek = daysPerWeek
+        self.age = age
+        self.sex = sex
+        self.heightFeet = heightFeet
+        self.heightInches = heightInches
+        self.experience = experience
+        self.goalPreset = goalPreset
+        self.goalCustom = goalCustom
+        self.timeframe = timeframe
+        self.injuries = injuries
+        self.conditions = conditions
+        self.availabilityDaysPerWeek = availabilityDaysPerWeek
         self.equipment = equipment
-        self.injuriesOrLimitations = injuriesOrLimitations
         self.notes = notes
     }
 
-    var isValid: Bool {
-        (1...7).contains(daysPerWeek)
-    }
-}
 
-// MARK: - Enums
-
-enum TrainingGoal: String, Codable, CaseIterable, Identifiable {
-    case fatLoss = "fat_loss"
-    case strength = "strength"
-    case hypertrophy = "hypertrophy"
-    case endurance = "endurance"
-    case performance = "performance"
-    case generalHealth = "general_health"
-
-    var id: String { rawValue }
-
-    var displayName: String {
-        switch self {
-        case .fatLoss: return "Fat Loss"
-        case .strength: return "Strength"
-        case .hypertrophy: return "Hypertrophy"
-        case .endurance: return "Endurance"
-        case .performance: return "Performance"
-        case .generalHealth: return "General Health"
+    enum Sex: String, Codable, CaseIterable, Hashable {
+        case male, female, unspecified
+        var display: String {
+            switch self {
+            case .male: return "Male"
+            case .female: return "Female"
+            case .unspecified: return "Prefer not to say"
+            }
         }
     }
-}
 
-enum EquipmentAccess: String, Codable, CaseIterable, Identifiable {
-    case gym = "gym"
-    case home = "home"
-    case both = "both"
-    case none = "none"
+    enum Experience: String, Codable, CaseIterable, Hashable {
+        case new, beginner, intermediate, advanced
 
-    var id: String { rawValue }
-
-    var displayName: String {
-        switch self {
-        case .gym: return "Gym"
-        case .home: return "Home"
-        case .both: return "Both"
-        case .none: return "None / Bodyweight"
+        var label: String {
+            switch self {
+            case .new: return "New"
+            case .beginner: return "Beginner 0–1 Years"
+            case .intermediate: return "Intermediate 2–5 Years"
+            case .advanced: return "Advanced 5+ Years"
+            }
         }
     }
-}
 
-// MARK: - DB Insert Model (what you send to Supabase)
+    enum GoalPreset: String, Codable, CaseIterable, Hashable {
+        case fatLoss
+        case strength
+        case hypertrophy
+        case endurance
+        case performance
+        case generalHealth
+        case custom
 
-struct TrainerClientRequestInsert: Codable, Hashable {
-    let trainer_id: UUID
-    let client_id: UUID
-    let payload: TrainerRequestPayload
+        var displayName: String {
+            switch self {
+            case .fatLoss: return "Fat Loss"
+            case .strength: return "Strength"
+            case .hypertrophy: return "Hypertrophy"
+            case .endurance: return "Endurance"
+            case .performance: return "Performance"
+            case .generalHealth: return "General Health"
+            case .custom: return "Custom…"
+            }
+        }
+    }
 
-    init(trainerId: UUID, clientId: UUID, payload: TrainerRequestPayload) {
-        self.trainer_id = trainerId
-        self.client_id = clientId
-        self.payload = payload
+    enum Equipment: String, Codable, CaseIterable, Hashable {
+        case gym, home, both, none
+
+        var displayName: String {
+            switch self {
+            case .gym: return "Gym"
+            case .home: return "Home"
+            case .both: return "Both"
+            case .none: return "None / Bodyweight"
+            }
+        }
+    }
+    
+    var canAdvanceFromBasics: Bool {
+        !timeframe.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 }

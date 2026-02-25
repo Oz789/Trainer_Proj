@@ -4,26 +4,18 @@ import Supabase
 enum TrainerRequestServiceError: LocalizedError {
     case notAuthenticated
     case requestAlreadyPending
-    case unknown(String)
+    case unknown
 
     var errorDescription: String? {
         switch self {
-        case .notAuthenticated:
-            return "You must be logged in to send a request."
-        case .requestAlreadyPending:
-            return "You already have a pending request with this trainer."
-        case .unknown(let msg):
-            return msg
+        case .notAuthenticated: return "You must be logged in to send a request."
+        case .requestAlreadyPending: return "You already have a pending request with this trainer."
+        case .unknown: return "Request failed. Please try again."
         }
     }
 }
 
-protocol TrainerRequestServiceProtocol {
-    func submitRequest(trainerId: UUID, payload: TrainerRequestPayload) async throws
-}
-
-/// Writes into: public.trainer_client_requests
-final class TrainerRequestService: TrainerRequestServiceProtocol {
+final class SupabaseTrainerRequestService: TrainerRequestServiceProtocol {
     private let client: SupabaseClient
     private let currentUserId: () -> UUID?
 
@@ -37,19 +29,18 @@ final class TrainerRequestService: TrainerRequestServiceProtocol {
             throw TrainerRequestServiceError.notAuthenticated
         }
 
-        // Insert model matching your table column names
         struct InsertRow: Encodable {
             let trainer_id: UUID
             let client_id: UUID
+            let status: String
             let payload: TrainerRequestPayload
-            let status: String  // "pending"
         }
 
         let row = InsertRow(
             trainer_id: trainerId,
             client_id: uid,
-            payload: payload,
-            status: "pending"
+            status: "pending",
+            payload: payload
         )
 
         do {
@@ -58,15 +49,12 @@ final class TrainerRequestService: TrainerRequestServiceProtocol {
                 .insert(row)
                 .execute()
         } catch {
-            // Duplicate pending request will trigger unique index violation (Postgres 23505)
-            // Supabase Swift errors vary by version; safest is string match on 23505.
-            let msg = String(describing: error)
-
-            if msg.contains("23505") || msg.lowercased().contains("duplicate") || msg.lowercased().contains("uq_one_pending_request_per_pair") {
+            let msg = String(describing: error).lowercased()
+            if msg.contains("23505") || msg.contains("uq_one_pending_request_per_pair") || msg.contains("duplicate") {
                 throw TrainerRequestServiceError.requestAlreadyPending
             }
 
-            throw TrainerRequestServiceError.unknown("Request failed. Please try again.")
+            throw TrainerRequestServiceError.unknown
         }
     }
 }
