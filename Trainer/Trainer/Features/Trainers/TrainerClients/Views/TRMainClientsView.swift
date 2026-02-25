@@ -3,27 +3,22 @@ import SwiftUI
 @MainActor
 struct TRMainClientsView: View {
     @EnvironmentObject private var themeManager: ThemeManager
+    @EnvironmentObject private var session: SessionManager
     @Environment(\.colorScheme) private var scheme
+    @StateObject private var vm: TRMainClientsViewModel
     private var t: ThemeTokens { themeManager.tokens(for: scheme) }
-
-    @State private var vm: TRMainClientsViewModel
-
     private let tabBarClearance: CGFloat = 92
-
     private var titleColor: Color { scheme == .dark ? t.titleColor : .black }
-    private var textPrimary: Color { scheme == .dark ? t.textPrimary : .black.opacity(0.88) }
     private var textSecondary: Color { scheme == .dark ? t.textSecondary : .black.opacity(0.50) }
     private var pillFill: Color { scheme == .dark ? t.segmentedFill : .black.opacity(0.06) }
-    private var cardFill: Color {
-        scheme == .dark ? t.cardBackground : .white
-    }
+    private var cardFill: Color { scheme == .dark ? t.cardBackground : .white }
 
     init() {
-        _vm = State(initialValue: TRMainClientsViewModel(clients: TRClient.sample))
+        _vm = StateObject(wrappedValue: TRMainClientsViewModel(service: SupabaseTrainerClientsService(client: supabase)))
     }
 
     init(viewModel: TRMainClientsViewModel) {
-        _vm = State(initialValue: viewModel)
+        _vm = StateObject(wrappedValue: viewModel)
     }
 
     var body: some View {
@@ -40,65 +35,153 @@ struct TRMainClientsView: View {
                 .padding(.horizontal, 18)
                 .padding(.bottom, tabBarClearance)
 
-                Spacer()
+                Spacer(minLength: 0)
             }
             .padding(.top, 10)
         }
         .navigationBarHidden(true)
+        .task {
+            guard let myId = session.session?.user.id else { return }
+            await vm.load(trainerId: myId)
+        }
     }
 
-    private var header: some View {
-        HStack {
-            ProfileSettingsButton()
-            Spacer()
+    // MARK: Header
 
-            Button { } label: {
-                Image(systemName: "slider.horizontal.3")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(textPrimary)
-                    .frame(width: 34, height: 34)
-                    .background(pillFill)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    private var header: some View {
+        ZStack {
+            HStack {
+                ProfileSettingsButton()
+                Spacer()
+                filterButton
             }
-            .buttonStyle(.plain)
+
+            Text("Clients")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(titleColor)
         }
         .padding(.horizontal, 18)
         .padding(.top, 8)
     }
 
+    private var filterButton: some View {
+        Button { } label: {
+            Image(systemName: "slider.horizontal.3")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundStyle(.primary)
+                .frame(width: 34, height: 34)
+                .background(pillFill)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: Card Content
+
     private var cardContent: some View {
         VStack(spacing: 12) {
-            Text("Clients")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(titleColor)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.bottom, 10)
-
             TRClientsSearchBar(text: $vm.searchText, placeholder: "Search")
 
+            if let err = vm.errorMessage {
+                Text(err)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 2)
+            }
+
             ScrollView(showsIndicators: false) {
-                VStack(spacing: 0) {
-                    ForEach(vm.filteredClients.indices, id: \.self) { i in
-                        let client = vm.filteredClients[i]
-                        TRClientRows(client: client, showDivider: i < vm.filteredClients.count - 1)
+                VStack(spacing: 14) {
+
+                    // Pending
+                    if !vm.pendingFiltered.isEmpty {
+                        sectionTitle("Pending")
+                        sectionCard {
+                            VStack(spacing: 0) {
+                                ForEach(vm.pendingFiltered.indices, id: \.self) { i in
+                                    let req = vm.pendingFiltered[i]
+                                    NavigationLink {
+                                        TRIncomingRequestDetailView(request: req)
+                                    } label: {
+                                        TRClientRows(
+                                            name: req.clientUsername,
+                                            subtitle: "Tap to review request",
+                                            showDivider: i < vm.pendingFiltered.count - 1
+                                        )
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
+                    }
+
+                    // Connected
+                    sectionTitle("Connected")
+                        .padding(.top, vm.pendingFiltered.isEmpty ? 2 : 0)
+
+                    sectionCard {
+                        VStack(spacing: 0) {
+                            let list = vm.connectedFiltered
+                            if list.isEmpty {
+                                Text("No connected clients yet.")
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(14)
+                            } else {
+                                ForEach(list.indices, id: \.self) { i in
+                                    let c = list[i]
+                                    TRClientRows(
+                                        name: c.clientUsername,
+                                        subtitle: "@\(c.clientUsername)",
+                                        showDivider: i < list.count - 1
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    if vm.canShowMoreConnected, let myId = session.session?.user.id {
+                        Button {
+                            Task { await vm.loadMoreConnected(trainerId: myId) }
+                        } label: {
+                            Text(vm.isLoadingMore ? "LOADING…" : "SHOW MORE")
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(textSecondary)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(vm.isLoadingMore)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .fill(pillFill)
+                        )
+                        .padding(.top, 4)
                     }
                 }
                 .padding(.bottom, 6)
             }
+        }
+    }
 
-            Button { } label: {
-                Text("SHOW MORE")
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(textSecondary)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-            }
-            .buttonStyle(.plain)
+    private func sectionTitle(_ title: String) -> some View {
+        Text(title)
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(textSecondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 2)
+    }
+
+    private func sectionCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        content()
             .background(
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
                     .fill(pillFill)
             )
-            .padding(.top, 6)
-        }
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(scheme == .dark ? .white.opacity(0.08) : .black.opacity(0.08), lineWidth: 1)
+            )
     }
 }

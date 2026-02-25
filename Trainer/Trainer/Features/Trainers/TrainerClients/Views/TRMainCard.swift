@@ -36,26 +36,3 @@ struct TRMainCard<Content: View>: View {
     }
 }
 
-#Preview("Light") {
-    ZStack {
-        Color.gray.opacity(0.15).ignoresSafeArea()
-        TRMainCard(fill: .white) {
-            Text("Matte Card")
-                .foregroundStyle(.black)
-        }
-        .padding()
-    }
-    .preferredColorScheme(.light)
-}
-
-#Preview("Dark") {
-    ZStack {
-        Color.black.ignoresSafeArea()
-        TRMainCard(fill: .black.opacity(0.35)) {
-            Text("Matte Card")
-                .foregroundStyle(.white)
-        }
-        .padding()
-    }
-    .preferredColorScheme(.dark)
-}
