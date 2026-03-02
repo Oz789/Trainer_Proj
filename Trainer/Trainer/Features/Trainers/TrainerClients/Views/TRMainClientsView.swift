@@ -6,6 +6,7 @@ struct TRMainClientsView: View {
     @EnvironmentObject private var session: SessionManager
     @Environment(\.colorScheme) private var scheme
     @StateObject private var vm: TRMainClientsViewModel
+
     private var t: ThemeTokens { themeManager.tokens(for: scheme) }
     private let tabBarClearance: CGFloat = 92
     private var titleColor: Color { scheme == .dark ? t.titleColor : .black }
@@ -14,7 +15,11 @@ struct TRMainClientsView: View {
     private var cardFill: Color { scheme == .dark ? t.cardBackground : .white }
 
     init() {
-        _vm = StateObject(wrappedValue: TRMainClientsViewModel(service: SupabaseTrainerClientsService(client: supabase)))
+        _vm = StateObject(
+            wrappedValue: TRMainClientsViewModel(
+                service: SupabaseTrainerClientsService(client: supabase)
+            )
+        )
     }
 
     init(viewModel: TRMainClientsViewModel) {
@@ -40,13 +45,15 @@ struct TRMainClientsView: View {
             .padding(.top, 10)
         }
         .navigationBarHidden(true)
-        .task {
-            guard let myId = session.session?.user.id else { return }
-            await vm.load(trainerId: myId)
-        }
+        .task { await initialLoad() }
     }
 
-    // MARK: Header
+    private func initialLoad() async {
+        guard let myId = session.session?.user.id else { return }
+        await vm.load(trainerId: myId)
+    }
+
+    // MARK: - Header
 
     private var header: some View {
         ZStack {
@@ -76,7 +83,7 @@ struct TRMainClientsView: View {
         .buttonStyle(.plain)
     }
 
-    // MARK: Card Content
+    // MARK: - Card Content
 
     private var cardContent: some View {
         VStack(spacing: 12) {
@@ -92,78 +99,102 @@ struct TRMainClientsView: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 14) {
-
-                    // Pending
-                    if !vm.pendingFiltered.isEmpty {
-                        sectionTitle("Pending")
-                        sectionCard {
-                            VStack(spacing: 0) {
-                                ForEach(vm.pendingFiltered.indices, id: \.self) { i in
-                                    let req = vm.pendingFiltered[i]
-                                    NavigationLink {
-                                        TRIncomingRequestDetailView(request: req)
-                                    } label: {
-                                        TRClientRows(
-                                            name: req.clientUsername,
-                                            subtitle: "Tap to review request",
-                                            showDivider: i < vm.pendingFiltered.count - 1
-                                        )
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                            }
-                        }
-                    }
-
-                    // Connected
-                    sectionTitle("Connected")
-                        .padding(.top, vm.pendingFiltered.isEmpty ? 2 : 0)
-
-                    sectionCard {
-                        VStack(spacing: 0) {
-                            let list = vm.connectedFiltered
-                            if list.isEmpty {
-                                Text("No connected clients yet.")
-                                    .font(.footnote)
-                                    .foregroundStyle(.secondary)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                    .padding(14)
-                            } else {
-                                ForEach(list.indices, id: \.self) { i in
-                                    let c = list[i]
-                                    TRClientRows(
-                                        name: c.clientUsername,
-                                        subtitle: "@\(c.clientUsername)",
-                                        showDivider: i < list.count - 1
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    if vm.canShowMoreConnected, let myId = session.session?.user.id {
-                        Button {
-                            Task { await vm.loadMoreConnected(trainerId: myId) }
-                        } label: {
-                            Text(vm.isLoadingMore ? "LOADING…" : "SHOW MORE")
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(textSecondary)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                        }
-                        .buttonStyle(.plain)
-                        .disabled(vm.isLoadingMore)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .fill(pillFill)
-                        )
-                        .padding(.top, 4)
-                    }
+                    pendingSection
+                    connectedSection
+                    showMoreSection
                 }
                 .padding(.bottom, 6)
+                Text("DEBUG pending=\(vm.pending.count) filtered=\(vm.pendingFiltered.count) search='\(vm.searchText)'")
+                    .font(.caption2)
+                    .foregroundStyle(.yellow)
             }
         }
     }
+    
+    // MARK: - Pending Section
+
+    @ViewBuilder
+    private var pendingSection: some View {
+        let list = vm.pendingFiltered
+        if !list.isEmpty {
+            sectionTitle("Pending")
+            sectionCard {
+                VStack(spacing: 0) {
+                    ForEach(list) { req in
+                        NavigationLink {
+                            TRIncomingRequestDetailView(request: req) {
+                                Task { await initialLoad() }
+                            }
+                        } label: {
+                            TRClientRows(
+                                name: req.clientUsername,
+                                subtitle: "Tap to review request",
+                                showDivider: req.id != list.last?.id
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Connected Section
+
+    private var connectedSection: some View {
+        VStack(spacing: 8) {
+            sectionTitle("Connected")
+                .padding(.top, vm.pendingFiltered.isEmpty ? 2 : 0)
+
+            sectionCard {
+                VStack(spacing: 0) {
+                    let list = vm.connectedFiltered
+                    if list.isEmpty {
+                        Text("No connected clients yet.")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(14)
+                    } else {
+                        ForEach(list.indices, id: \.self) { i in
+                            let c = list[i]
+                            TRClientRows(
+                                name: c.clientUsername,
+                                subtitle: "@\(c.clientUsername)",
+                                showDivider: i < list.count - 1
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Show More
+
+    @ViewBuilder
+    private var showMoreSection: some View {
+        if vm.canShowMoreConnected, let myId = session.session?.user.id {
+            Button {
+                Task { await vm.loadMoreConnected(trainerId: myId) }
+            } label: {
+                Text(vm.isLoadingMore ? "LOADING…" : "SHOW MORE")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(textSecondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+            }
+            .buttonStyle(.plain)
+            .disabled(vm.isLoadingMore)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(pillFill)
+            )
+            .padding(.top, 4)
+        }
+    }
+
+    // MARK: - Helpers
 
     private func sectionTitle(_ title: String) -> some View {
         Text(title)

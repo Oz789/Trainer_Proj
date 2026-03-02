@@ -27,17 +27,15 @@ final class SupabaseTrainerClientsService: TrainerClientsServiceProtocol {
     }
 
 
-
-
     func fetchConnectedClients(trainerId: UUID, offset: Int, limit: Int) async throws -> [TRConnectedClient] {
         let from = offset
         let to = max(offset + limit - 1, offset)
 
         let res = try await client
-            .from(DBViews.connectedClients)
+            .from("trainer_connected_clients_view")
             .select()
             .eq("trainer_id", value: trainerId.uuidString)
-            .order("created_at", ascending: false)
+            .order("started_at", ascending: false)
             .range(from: from, to: to)
             .execute()
 
@@ -50,5 +48,25 @@ final class SupabaseTrainerClientsService: TrainerClientsServiceProtocol {
             throw error
         }
     }
+
+    
+    func acceptRequest(requestId: UUID) async throws {
+        _ = try await client
+            .rpc("accept_trainer_request", params: [
+                "p_request_id": requestId.uuidString
+            ])
+            .execute()
+    }
+
+    func declineRequest(requestId: UUID, reason: String) async throws {
+        _ = try await client
+            .rpc("decline_trainer_request", params: [
+                "p_request_id": requestId.uuidString,
+                "p_reason": reason
+            ])
+            .execute()
+    }
+
+
 
 }

@@ -25,13 +25,16 @@ final class TRMainClientsViewModel: ObservableObject {
 
         async let reqsTask = service.fetchIncomingRequests(trainerId: trainerId)
         async let connTask = service.fetchConnectedClients(trainerId: trainerId, offset: 0, limit: pageSize)
-        
+
         do {
             let incoming = try await reqsTask
-            pending = incoming.filter { $0.status == "pending" }
+            pending = incoming
         } catch {
             pending = []
-            errorMessage = "Failed to load requests."
+            if errorMessage == nil {
+                errorMessage = "Failed to load requests: \(error.localizedDescription)"
+            }
+            print("fetchIncomingRequests failed:", error)
         }
 
         do {
@@ -43,7 +46,10 @@ final class TRMainClientsViewModel: ObservableObject {
             connected = []
             connectedOffset = 0
             reachedEnd = true
-            if errorMessage == nil { errorMessage = "Failed to load connected clients." }
+            if errorMessage == nil {
+                errorMessage = "Failed to load connected clients: \(error.localizedDescription)"
+            }
+            print("fetchConnectedClients failed:", error)
         }
     }
 
