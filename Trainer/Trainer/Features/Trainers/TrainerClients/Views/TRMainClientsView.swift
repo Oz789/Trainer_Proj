@@ -6,9 +6,13 @@ struct TRMainClientsView: View {
     @EnvironmentObject private var session: SessionManager
     @Environment(\.colorScheme) private var scheme
     @StateObject private var vm: TRMainClientsViewModel
+    @State private var selectedRequest: TRIncomingRequestRow? = nil
+    @State private var showFilters = false
+    @State private var filters = TRClientsFilterState()
 
     private var t: ThemeTokens { themeManager.tokens(for: scheme) }
     private let tabBarClearance: CGFloat = 92
+    private let pendingRowHeight: CGFloat = 62
     private var titleColor: Color { scheme == .dark ? t.titleColor : .black }
     private var textSecondary: Color { scheme == .dark ? t.textSecondary : .black.opacity(0.50) }
     private var pillFill: Color { scheme == .dark ? t.segmentedFill : .black.opacity(0.06) }
@@ -34,6 +38,8 @@ struct TRMainClientsView: View {
             VStack(spacing: 14) {
                 header
 
+                pendingSection
+
                 TRMainCard(fill: cardFill) {
                     cardContent
                 }
@@ -46,6 +52,20 @@ struct TRMainClientsView: View {
         }
         .navigationBarHidden(true)
         .task { await initialLoad() }
+        .sheet(item: $selectedRequest) { req in
+            TRIncomingRequestDetailView(request: req) {
+                Task { await initialLoad() }
+            }
+            .environmentObject(themeManager)
+            .presentationDetents([.large])
+            .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showFilters) {
+            TRClientsFilterSheet(filters: $filters)
+                .environmentObject(themeManager)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
+        }
     }
 
     private func initialLoad() async {
@@ -72,7 +92,7 @@ struct TRMainClientsView: View {
     }
 
     private var filterButton: some View {
-        Button { } label: {
+        Button { showFilters = true } label: {
             Image(systemName: "slider.horizontal.3")
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(.primary)
@@ -87,8 +107,6 @@ struct TRMainClientsView: View {
 
     private var cardContent: some View {
         VStack(spacing: 12) {
-            TRClientsSearchBar(text: $vm.searchText, placeholder: "Search")
-
             if let err = vm.errorMessage {
                 Text(err)
                     .font(.footnote)
@@ -99,7 +117,6 @@ struct TRMainClientsView: View {
 
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 14) {
-                    pendingSection
                     connectedSection
                     showMoreSection
                 }
@@ -115,27 +132,49 @@ struct TRMainClientsView: View {
 
     @ViewBuilder
     private var pendingSection: some View {
-        let list = vm.pendingFiltered
+        let list = vm.pending
         if !list.isEmpty {
-            sectionTitle("Pending")
-            sectionCard {
-                VStack(spacing: 0) {
-                    ForEach(list) { req in
-                        NavigationLink {
-                            TRIncomingRequestDetailView(request: req) {
-                                Task { await initialLoad() }
+            TRMainCard(fill: cardFill) {
+                VStack(spacing: 12) {
+                    sectionTitle("Pending")
+
+                    if list.count > 3 {
+                        ScrollView(showsIndicators: false) {
+                            VStack(spacing: 0) {
+                                ForEach(list) { req in
+                                    Button {
+                                        selectedRequest = req
+                                    } label: {
+                                        TRClientRows(
+                                            name: req.clientUsername,
+                                            subtitle: "Tap to review request",
+                                            showDivider: req.id != list.last?.id
+                                        )
+                                    }
+                                    .buttonStyle(.plain)
+                                }
                             }
-                        } label: {
-                            TRClientRows(
-                                name: req.clientUsername,
-                                subtitle: "Tap to review request",
-                                showDivider: req.id != list.last?.id
-                            )
                         }
-                        .buttonStyle(.plain)
+                        .frame(maxHeight: pendingRowHeight * 3)
+                    } else {
+                        VStack(spacing: 0) {
+                            ForEach(list) { req in
+                                Button {
+                                    selectedRequest = req
+                                } label: {
+                                    TRClientRows(
+                                        name: req.clientUsername,
+                                        subtitle: "Tap to review request",
+                                        showDivider: req.id != list.last?.id
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
                     }
                 }
             }
+            .padding(.horizontal, 18)
         }
     }
 
@@ -144,11 +183,13 @@ struct TRMainClientsView: View {
     private var connectedSection: some View {
         VStack(spacing: 8) {
             sectionTitle("Connected")
-                .padding(.top, vm.pendingFiltered.isEmpty ? 2 : 0)
+                .padding(.top, vm.pending.isEmpty ? 2 : 0)
+
+            TRClientsSearchBar(text: $vm.searchText, placeholder: "Search")
 
             sectionCard {
                 VStack(spacing: 0) {
-                    let list = vm.connectedFiltered
+                    let list = sortedConnected(vm.connectedFiltered)
                     if list.isEmpty {
                         Text("No connected clients yet.")
                             .font(.footnote)
@@ -215,4 +256,25 @@ struct TRMainClientsView: View {
                     .stroke(scheme == .dark ? .white.opacity(0.08) : .black.opacity(0.08), lineWidth: 1)
             )
     }
+
+    private func sortedConnected(_ list: [TRConnectedClient]) -> [TRConnectedClient] {
+        switch filters.sort {
+        case .az:
+            return list.sorted { $0.clientUsername.localizedCaseInsensitiveCompare($1.clientUsername) == .orderedAscending }
+        case .za:
+            return list.sorted { $0.clientUsername.localizedCaseInsensitiveCompare($1.clientUsername) == .orderedDescending }
+        }
+    }
+}
+
+#Preview("TRMainClientsView (Mock Trainer)") {
+    let themeManager = ThemeManager()
+    let session = MockAuthStore.makeSessionManagerTrainer()
+
+    return NavigationStack {
+        TRMainClientsView()
+    }
+    .environmentObject(themeManager)
+    .environmentObject(session)
+    
 }

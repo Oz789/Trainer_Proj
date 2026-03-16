@@ -2,10 +2,18 @@ import SwiftUI
 
 @MainActor
 struct TRIncomingRequestDetailView: View {
+    @EnvironmentObject private var themeManager: ThemeManager
+    @Environment(\.colorScheme) private var scheme
     @Environment(\.dismiss) private var dismiss
     let request: TRIncomingRequestRow
     @StateObject private var vm: TRIncomingRequestDetailViewModel
     let onDecision: (() -> Void)?
+
+    private var t: ThemeTokens { themeManager.tokens(for: scheme) }
+    private var titleColor: Color { scheme == .dark ? t.titleColor : .black }
+    private var textSecondary: Color { scheme == .dark ? t.textSecondary : .black.opacity(0.55) }
+    private var pillFill: Color { scheme == .dark ? t.segmentedFill : .black.opacity(0.06) }
+    private var cardFill: Color { scheme == .dark ? t.cardBackground : .white }
     
     init(
         request: TRIncomingRequestRow,
@@ -19,23 +27,33 @@ struct TRIncomingRequestDetailView: View {
 
     
     var body: some View {
-        VStack(spacing: 14) {
-            header
-            
-            detailsCard
-            
-            if let err = vm.errorMessage {
-                Text(err)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+        ZStack {
+            LinearGradient(colors: t.backgroundGradient, startPoint: .top, endPoint: .bottom)
+                .ignoresSafeArea()
+
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 16) {
+                    header
+
+                    profileCard
+                    detailsCard
+                    notesCard
+
+                    if let err = vm.errorMessage {
+                        Text(err)
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+
+                    actionButtons
+                }
+                .padding(.horizontal, 18)
+                .padding(.top, 12)
+                .padding(.bottom, 24)
             }
-            
-            actionButtons
         }
-        .padding(18)
-        .navigationTitle("Request")
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarHidden(true)
         .confirmationDialog(
             "Accept this client request?",
             isPresented: $vm.showAcceptConfirm,
@@ -55,36 +73,92 @@ struct TRIncomingRequestDetailView: View {
     }
     
     private var header: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(request.clientUsername)
-                .font(.title3.weight(.semibold))
-            Text("Status: \(request.status)")
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+        ZStack {
+            HStack {
+                Button { dismiss() } label: {
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(titleColor)
+                        .frame(width: 32, height: 32)
+                        .background(cardFill.opacity(0.6))
+                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                }
+                .buttonStyle(.plain)
+
+                Spacer()
+            }
+
+            Text("Incoming Request")
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(titleColor)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
-    
-    private var detailsCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("Request Details")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-            Text("Goal: \(request.payload.goalPreset)")
-            Text("Experience: \(request.payload.experience)")
-            Text("Days/week: \(request.payload.availabilityDaysPerWeek)")
-            Text("Equipment: \(request.payload.equipment)")
-            
-            if !request.payload.notes.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                Text("Notes: \(request.payload.notes)")
+
+    private var profileCard: some View {
+        infoCard {
+            HStack(spacing: 14) {
+                Circle()
+                    .fill(scheme == .dark ? .white.opacity(0.12) : .black.opacity(0.08))
+                    .frame(width: 54, height: 54)
+                    .overlay(
+                        Image(systemName: "person.fill")
+                            .font(.system(size: 20, weight: .semibold))
+                            .foregroundStyle(scheme == .dark ? .white.opacity(0.8) : .black.opacity(0.6))
+                    )
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(request.clientUsername)
+                        .font(.title3.weight(.semibold))
+                        .foregroundStyle(titleColor)
+
+                    Text("@\(request.clientUsername.lowercased())")
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(textSecondary)
+
+                    Text("Requested \(formattedDate)")
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(textSecondary)
+                }
+
+                Spacer()
             }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(14)
-        .background(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .fill(.ultraThinMaterial)
-        )
+    }
+
+    private var detailsCard: some View {
+        infoCard {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Request Details")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(textSecondary)
+
+                infoRow(label: "Goal", value: goalDisplay)
+                infoRow(label: "Experience", value: request.payload.experience.label)
+                infoRow(label: "Days / Week", value: "\(request.payload.availabilityDaysPerWeek)")
+                infoRow(label: "Equipment", value: request.payload.equipment.displayName)
+                infoRow(label: "Timeframe", value: request.payload.timeframe.isEmpty ? "—" : request.payload.timeframe)
+                infoRow(label: "Injuries", value: request.payload.injuries.isEmpty ? "None" : request.payload.injuries)
+                infoRow(label: "Conditions", value: request.payload.conditions.isEmpty ? "None" : request.payload.conditions)
+            }
+        }
+    }
+
+    private var notesCard: some View {
+        let notes = request.payload.notes.trimmingCharacters(in: .whitespacesAndNewlines)
+        return Group {
+            if !notes.isEmpty {
+                infoCard {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Notes")
+                            .font(.caption.weight(.semibold))
+                            .foregroundStyle(textSecondary)
+                        Text(notes)
+                            .font(.subheadline)
+                            .foregroundStyle(.primary)
+                    }
+                }
+            }
+        }
     }
     
     private var actionButtons: some View {
@@ -94,11 +168,19 @@ struct TRIncomingRequestDetailView: View {
             } label: {
                 Text(vm.isSubmitting ? "PLEASE WAIT…" : "DECLINE")
                     .font(.callout.weight(.semibold))
+                    .foregroundStyle(titleColor)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(pillFill)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .stroke(scheme == .dark ? .white.opacity(0.12) : .black.opacity(0.12), lineWidth: 1)
+                    )
             }
-            .buttonStyle(.bordered)
-            .tint(.red)
+            .buttonStyle(.plain)
             .disabled(vm.isSubmitting)
             
             Button {
@@ -106,12 +188,64 @@ struct TRIncomingRequestDetailView: View {
             } label: {
                 Text(vm.isSubmitting ? "PLEASE WAIT…" : "ACCEPT")
                     .font(.callout.weight(.semibold))
+                    .foregroundStyle(.white)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 14, style: .continuous)
+                            .fill(LinearGradient(colors: t.ctaGradient, startPoint: .leading, endPoint: .trailing))
+                    )
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(.plain)
             .disabled(vm.isSubmitting)
         }
+    }
+
+    private var formattedDate: String {
+        Self.dateFormatter.string(from: request.createdAt)
+    }
+
+    private static let dateFormatter: DateFormatter = {
+        let df = DateFormatter()
+        df.dateStyle = .medium
+        return df
+    }()
+
+    private var goalDisplay: String {
+        if request.payload.goalPreset == .custom {
+            let custom = request.payload.goalCustom?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            return custom.isEmpty ? "Custom" : custom
+        }
+        return request.payload.goalPreset.displayName
+    }
+
+    private func infoRow(label: String, value: String) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Text(label)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(textSecondary)
+                .frame(width: 110, alignment: .leading)
+
+            Text(value)
+                .font(.subheadline.weight(.semibold))
+                .foregroundStyle(.primary)
+
+            Spacer(minLength: 0)
+        }
+    }
+
+    private func infoCard<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        content()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .fill(cardFill)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(scheme == .dark ? .white.opacity(0.08) : .black.opacity(0.08), lineWidth: 1)
+            )
     }
     
     private var declineSheet: some View {
