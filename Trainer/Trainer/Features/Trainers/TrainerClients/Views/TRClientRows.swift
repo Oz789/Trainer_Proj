@@ -1,22 +1,15 @@
 import SwiftUI
 
 struct TRClientRows: View {
-    let client: TRClient
+    let name: String
+    let subtitle: String
     let showDivider: Bool
 
     @Environment(\.colorScheme) private var scheme
 
-    private var iconBG: Color {
-        scheme == .dark ? .white.opacity(0.10) : .black.opacity(0.06)
-    }
-
-    private var iconFG: Color {
-        scheme == .dark ? .white.opacity(0.75) : .black.opacity(0.55)
-    }
-
-    private var dividerColor: Color {
-        scheme == .dark ? .white.opacity(0.08) : .black.opacity(0.08)
-    }
+    private var iconBG: Color { scheme == .dark ? .white.opacity(0.10) : .black.opacity(0.06) }
+    private var iconFG: Color { scheme == .dark ? .white.opacity(0.75) : .black.opacity(0.55) }
+    private var dividerColor: Color { scheme == .dark ? .white.opacity(0.08) : .black.opacity(0.08) }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -31,28 +24,20 @@ struct TRClientRows: View {
                     )
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(client.name)
+                    Text(name)
                         .font(.subheadline.weight(.semibold))
                         .foregroundStyle(.primary)
 
-                    Text(client.handle)
+                    Text(subtitle)
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(.secondary)
                 }
 
                 Spacer()
 
-                VStack(alignment: .trailing, spacing: 3) {
-                    Text(String(format: "%.1f", client.score))
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.primary)
-
-                    Text(String(format: "%@ %.1f",
-                                client.delta >= 0 ? "▲" : "▼",
-                                abs(client.delta)))
-                        .font(.caption2.weight(.semibold))
-                        .foregroundStyle(.secondary)
-                }
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(.secondary.opacity(0.7))
             }
             .padding(.vertical, 14)
             .padding(.horizontal, 12)

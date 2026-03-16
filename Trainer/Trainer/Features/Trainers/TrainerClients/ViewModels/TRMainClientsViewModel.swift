@@ -1,54 +1,101 @@
 import Foundation
-import Observation
 
 @MainActor
-@Observable
-final class TRMainClientsViewModel {
+final class TRMainClientsViewModel: ObservableObject {
+    @Published var searchText: String = ""
+    @Published private(set) var pending: [TRIncomingRequestRow] = []
+    @Published private(set) var connected: [TRConnectedClient] = []
+    @Published private(set) var isLoading: Bool = false
+    @Published private(set) var isLoadingMore: Bool = false
+    @Published var errorMessage: String? = nil
 
-    var searchText: String = ""
-    var selectedFilter: TRClient.Status = .active
+    private let service: TrainerClientsServiceProtocol
+    private(set) var connectedOffset: Int = 0
+    private let pageSize: Int = 10
+    private(set) var reachedEnd: Bool = false
 
-    // MARK: - Data
-    private(set) var clients: [TRClient] = []
+    init(service: TrainerClientsServiceProtocol) {
+        self.service = service
+    }
 
-    var filteredClients: [TRClient] {
-        let byStatus = clients.filter { client in
-            selectedFilter == .all ? true : client.status == selectedFilter
+    func load(trainerId: UUID) async {
+        errorMessage = nil
+        isLoading = true
+        defer { isLoading = false }
+
+        async let reqsTask = service.fetchIncomingRequests(trainerId: trainerId)
+        async let connTask = service.fetchConnectedClients(trainerId: trainerId, offset: 0, limit: pageSize)
+
+        do {
+            let incoming = try await reqsTask
+            pending = incoming
+        } catch {
+            pending = []
+            if errorMessage == nil {
+                errorMessage = "Failed to load requests: \(error.localizedDescription)"
+            }
+            print("fetchIncomingRequests failed:", error)
         }
 
-        guard !searchText.isEmpty else { return byStatus }
-
-        let q = searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !q.isEmpty else { return byStatus }
-
-        return byStatus.filter { client in
-            client.name.localizedCaseInsensitiveContains(q) ||
-            client.handle.localizedCaseInsensitiveContains(q) ||
-            client.subtitle.localizedCaseInsensitiveContains(q)
+        do {
+            let connectedFirst = try await connTask
+            connected = connectedFirst
+            connectedOffset = connectedFirst.count
+            reachedEnd = connectedFirst.count < pageSize
+        } catch {
+            connected = []
+            connectedOffset = 0
+            reachedEnd = true
+            if errorMessage == nil {
+                errorMessage = "Failed to load connected clients: \(error.localizedDescription)"
+            }
+            print("fetchConnectedClients failed:", error)
         }
     }
 
-    var counts: Counts {
-        Counts(
-            active: clients.filter { $0.status == .active }.count,
-            needsCheckIn: clients.filter { $0.status == .needsCheckIn }.count,
-            new: clients.filter { $0.status == .new }.count,
-            total: clients.count
-        )
+
+    func loadMoreConnected(trainerId: UUID) async {
+        guard !reachedEnd, !isLoadingMore else { return }
+
+        isLoadingMore = true
+        defer { isLoadingMore = false }
+
+        do {
+            let next = try await service.fetchConnectedClients(
+                trainerId: trainerId,
+                offset: connectedOffset,
+                limit: pageSize
+            )
+
+            connected.append(contentsOf: next)
+            connectedOffset += next.count
+            if next.count < pageSize { reachedEnd = true }
+        } catch {
+            errorMessage = "Failed to load more."
+        }
     }
 
-    init(clients: [TRClient] = []) {
-        self.clients = clients
+    // MARK: - (client-side search)
+
+    var pendingFiltered: [TRIncomingRequestRow] {
+        let q = searchText.trimLower
+        guard !q.isEmpty else { return pending }
+        return pending.filter { $0.clientUsername.lowercased().contains(q) }
     }
 
-    func loadSample() {
-        self.clients = TRClient.sample
+    var connectedFiltered: [TRConnectedClient] {
+        let q = searchText.trimLower
+        guard !q.isEmpty else { return connected }
+        return connected.filter { $0.clientUsername.lowercased().contains(q) }
     }
 
-    struct Counts: Hashable {
-        let active: Int
-        let needsCheckIn: Int
-        let new: Int
-        let total: Int
+    var canShowMoreConnected: Bool {
+        !reachedEnd && !connectedFiltered.isEmpty
+    }
+}
+
+private extension String {
+    var trimLower: String {
+        trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
     }
 }

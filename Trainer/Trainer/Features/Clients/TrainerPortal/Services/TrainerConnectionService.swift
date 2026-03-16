@@ -34,4 +34,26 @@ final class TrainerConnectionService {
             .insert(InsertRow(trainer_id: trainerId, client_id: userId, status: "pending"))
             .execute()
     }
+    
+    func acceptRequest(requestId: UUID) async throws {
+        try await supabase
+            .from("trainer_client_connections")
+            .update([
+                "status": "accepted",
+                "decline_reason": nil
+            ])
+            .eq("id", value: requestId.uuidString)
+            .execute()
+    }
+
+    func declineRequest(requestId: UUID, reason: String) async throws {
+        try await supabase
+            .from("trainer_client_connections")
+            .update([
+                "status": "declined",
+                "decline_reason": reason
+            ])
+            .eq("id", value: requestId.uuidString)
+            .execute()
+    }
 }
