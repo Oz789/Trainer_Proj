@@ -60,11 +60,10 @@ struct TRMainClientsView: View {
             .presentationDetents([.large])
             .presentationDragIndicator(.visible)
         }
-        .sheet(isPresented: $showFilters) {
-            TRClientsFilterSheet(filters: $filters)
-                .environmentObject(themeManager)
-                .presentationDetents([.medium, .large])
-                .presentationDragIndicator(.visible)
+        .overlay {
+            if showFilters {
+                filterModalOverlay
+            }
         }
     }
 
@@ -264,6 +263,31 @@ struct TRMainClientsView: View {
         case .za:
             return list.sorted { $0.clientUsername.localizedCaseInsensitiveCompare($1.clientUsername) == .orderedDescending }
         }
+    }
+
+    private var filterModalOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.45)
+                .ignoresSafeArea()
+                .onTapGesture { showFilters = false }
+
+            TRClientsFilterSheet(filters: $filters)
+                .environmentObject(themeManager)
+                .frame(maxWidth: 380)
+                .frame(maxHeight: 520)
+                .background(
+                    RoundedRectangle(cornerRadius: 26, style: .continuous)
+                        .fill(.ultraThinMaterial)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 26, style: .continuous)
+                        .stroke(scheme == .dark ? .white.opacity(0.12) : .black.opacity(0.12), lineWidth: 1)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
+                .padding(.horizontal, 24)
+                .transition(.scale.combined(with: .opacity))
+        }
+        .animation(.spring(response: 0.32, dampingFraction: 0.86), value: showFilters)
     }
 }
 
