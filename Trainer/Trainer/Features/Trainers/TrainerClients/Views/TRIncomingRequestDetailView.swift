@@ -5,8 +5,9 @@ struct TRIncomingRequestDetailView: View {
     @EnvironmentObject private var themeManager: ThemeManager
     @Environment(\.colorScheme) private var scheme
     @Environment(\.dismiss) private var dismiss
-    let request: TRIncomingRequestRow
     @StateObject private var vm: TRIncomingRequestDetailViewModel
+    @State private var showMessages = false
+    let request: TRIncomingRequestRow
     let onDecision: (() -> Void)?
 
     private var t: ThemeTokens { themeManager.tokens(for: scheme) }
@@ -34,7 +35,6 @@ struct TRIncomingRequestDetailView: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 16) {
                     header
-
                     profileCard
                     detailsCard
                     notesCard
@@ -73,27 +73,45 @@ struct TRIncomingRequestDetailView: View {
     }
     
     private var header: some View {
-        ZStack {
-            HStack {
-                Button { dismiss() } label: {
-                    Image(systemName: "chevron.left")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(titleColor)
-                        .frame(width: 32, height: 32)
-                        .background(cardFill.opacity(0.6))
-                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                }
-                .buttonStyle(.plain)
-
-                Spacer()
+        HStack {
+            Button { dismiss() } label: {
+                Image(systemName: "chevron.left")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(titleColor)
+                    .frame(width: 32, height: 32)
+                    .background(cardFill.opacity(0.6))
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             }
+            .buttonStyle(.plain)
+
+            Spacer()
 
             Text("Incoming Request")
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundStyle(titleColor)
+
+            Spacer()
+
+            Button {
+                showMessages = true
+            } label: {
+                Image(systemName: "bubble.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(titleColor)
+                    .frame(width: 32, height: 32)
+                    .background(cardFill.opacity(0.6))
+                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            }
+            .buttonStyle(.plain)
+        }
+        .sheet(isPresented: $showMessages) {
+            NavigationStack {
+                RootMessagesView()
+                    .environmentObject(themeManager)
+            }
         }
     }
-
+    
     private var profileCard: some View {
         infoCard {
             HStack(spacing: 14) {
